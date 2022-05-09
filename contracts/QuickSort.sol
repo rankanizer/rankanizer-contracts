@@ -15,7 +15,6 @@ contract QuickSort {
     ) internal {
         int256 i = left;
         int256 j = right;
-        if (i == j) return;
         uint256 pivot = arr[ref[uint256(left + (right - left) / 2)]];
         while (i <= j) {
             while (arr[ref[uint256(i)]] > pivot) i++;

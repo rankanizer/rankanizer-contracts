@@ -5,7 +5,7 @@ const LOG_MODE = false;
 const Ballot = artifacts.require('Ballot');
 
 contract('Ballot', function (accounts) {
-  const [ owner, accountA, accountB, accountC, accountD, accountE, accountF ] = accounts;
+  const [ owner, accountA, accountB, accountC, accountD, accountE, accountF, accountG, accountH ] = accounts;
 
   describe('constructorBallot', function () {
     let ballot;
@@ -22,8 +22,8 @@ contract('Ballot', function (accounts) {
       await expectRevert(ballot, 'The duration of the poll must be greater than zero');
 
       ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
-      const expire = await time.latestBlock() + 5;
-      expect(await ballot.expire()).to.be.equal(new BN(expire));
+      const expire = (new BN(5)).add(await time.latestBlock());
+      expect(await ballot.expire()).to.be.bignumber.equal(new BN(expire));
     });
 
     // Vote Tests
@@ -116,6 +116,58 @@ contract('Ballot', function (accounts) {
 
       await expectRevert(ballot.vote(1, { from: accountF }), 'This poll is closed. No more votes allowed');
       expect(await ballot.votesOf(1)).to.be.bignumber.equal('2');
+    });
+
+    it('votes_in_order_odd', async function () {
+      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });
+
+      await ballot.vote(0, { from: accountA });
+      await ballot.vote(1, { from: accountB });
+      await ballot.vote(1, { from: accountC });
+      await ballot.vote(2, { from: accountD });
+      await ballot.vote(2, { from: accountE });
+      await ballot.vote(2, { from: accountF });
+    });
+
+    it('votes_in_order_even', async function () {
+      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb', 'Hastur'], 10, { from: owner });
+
+      await ballot.vote(0, { from: accountA });
+      await ballot.vote(1, { from: accountB });
+      await ballot.vote(1, { from: accountC });
+      await ballot.vote(2, { from: accountD });
+      await ballot.vote(2, { from: accountC });
+      await ballot.vote(2, { from: accountD });
+      await ballot.vote(3, { from: accountE });
+      await ballot.vote(3, { from: accountF });
+      await ballot.vote(3, { from: accountG });
+      await ballot.vote(3, { from: accountH });
+    });
+
+    it('votes_reverse_order_odd', async function () {
+      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });
+
+      await ballot.vote(2, { from: accountA });
+      await ballot.vote(2, { from: accountB });
+      await ballot.vote(2, { from: accountC });
+      await ballot.vote(1, { from: accountD });
+      await ballot.vote(1, { from: accountE });
+      await ballot.vote(0, { from: accountF });
+    });
+
+    it('votes_reverse_order_even', async function () {
+      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb', 'Hastur'], 10, { from: owner });
+
+      await ballot.vote(3, { from: accountA });
+      await ballot.vote(3, { from: accountB });
+      await ballot.vote(3, { from: accountC });
+      await ballot.vote(3, { from: accountD });
+      await ballot.vote(2, { from: accountC });
+      await ballot.vote(2, { from: accountD });
+      await ballot.vote(2, { from: accountE });
+      await ballot.vote(1, { from: accountF });
+      await ballot.vote(1, { from: accountG });
+      await ballot.vote(0, { from: accountH });
     });
 
     // Winner tests
