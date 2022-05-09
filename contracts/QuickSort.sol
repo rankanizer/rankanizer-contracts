@@ -1,8 +1,7 @@
 pragma solidity ^0.8.3;
 
 contract QuickSort {
-    
-   function sort(uint256[] memory data, uint256[] memory ref) public returns (uint256[] memory) {
+    function sort(uint256[] memory data, uint256[] memory ref) public returns (uint256[] memory) {
         _quickSort(data, ref, int256(0), int256(data.length - 1));
         return ref;
     }

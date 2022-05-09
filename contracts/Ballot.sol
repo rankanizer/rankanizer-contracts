@@ -2,16 +2,13 @@
 
 pragma solidity ^0.8.3;
 
-import './QuickSort.sol';
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./QuickSort.sol";
 
 /// @author FVB
 /// @title  Ballot
-// - Ao criar o contrato, vc fornece um array opcoes, e um parametro "duration" que é em quantos blocos a transação vai terminar.
-// - Escolha única, cada conta pode votar uma única vez
-// - A conta pode mudar o voto
-// - Opção com mais votos vence (obs: pode haver empate)
-// - Depois de finalizada, nenhum voto mais é aceito, a conta não pode mais mudar o voto
-contract Ballot {
+contract Ballot is Initializable, OwnableUpgradeable {
     string[] private _candidates;
     uint256[] private _votes;
     uint256[] private _winners;
@@ -26,7 +23,17 @@ contract Ballot {
 
     mapping(address => Voter) public voters;
 
-    constructor(string[] memory candidates, uint256 newDuration) {
+    function initialize(string[] memory candidates, uint256 newDuration) external initializer {
+        __Ballot_init(candidates, newDuration);
+    }
+
+    function __Ballot_init(string[] memory candidates, uint256 newDuration) internal {
+        __Context_init_unchained();
+        __Ownable_init_unchained();
+        __Ballot_init_unchained(candidates, newDuration);
+    }
+
+    function __Ballot_init_unchained(string[] memory candidates, uint256 newDuration) internal {
         require(candidates.length > 1, "The list of candidates should have at least two elements");
         require(newDuration > 0, "The duration of the poll must be greater than zero");
 
@@ -114,4 +121,6 @@ contract Ballot {
     function finished() public view returns (bool) {
         return _finished;
     }
+
+    uint256[44] private __gap;
 }

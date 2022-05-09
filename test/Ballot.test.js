@@ -5,7 +5,9 @@ const LOG_MODE = false;
 const Ballot = artifacts.require('Ballot');
 
 contract('Ballot', function (accounts) {
-  const [ owner, accountA, accountB, accountC, accountD, accountE, accountF, accountG, accountH ] = accounts;
+  const [ owner,
+    accountA, accountB, accountC, accountD, accountE,
+    accountF, accountG, accountH, accountI, accountJ ] = accounts;
 
   describe('constructorBallot', function () {
     let ballot;
@@ -13,22 +15,27 @@ contract('Ballot', function (accounts) {
     before(async () => {
     });
 
-    it('constructor', async function () {
-      ballot = Ballot.new([], 5, { from: owner });
-      await expectRevert(ballot, 'The list of candidates should have at least two elements');
-      ballot = Ballot.new(['A'], 5, { from: owner });
-      await expectRevert(ballot, 'The list of candidates should have at least two elements');
-      ballot = Ballot.new(['A', 'B'], 0, { from: owner });
-      await expectRevert(ballot, 'The duration of the poll must be greater than zero');
+    it('initializer', async function () {
+      const ballot1 = await Ballot.new();
+      await expectRevert(ballot1.initialize([], 5, { from: owner }),
+        'The list of candidates should have at least two elements');
+      const ballot2 = await Ballot.new();
+      await expectRevert(ballot2.initialize(['A'], 5, { from: owner }),
+        'The list of candidates should have at least two elements');
+      const ballot3 = await Ballot.new();
+      await expectRevert(ballot3.initialize(['A', 'B'], 0, { from: owner }),
+        'The duration of the poll must be greater than zero');
 
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      const ballot4 = await Ballot.new();
+      await ballot4.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
       const expire = (new BN(5)).add(await time.latestBlock());
-      expect(await ballot.expire()).to.be.bignumber.equal(new BN(expire));
+      expect(await ballot4.expire()).to.be.bignumber.equal(new BN(expire));
     });
 
     // Vote Tests
     it('vote', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
       await ballot.vote(1);
       expect(await ballot.votesOf(1)).to.be.bignumber.equal('1');
       const votes = await await ballot.votes();
@@ -36,17 +43,20 @@ contract('Ballot', function (accounts) {
     });
 
     it('votes_of_no_candidate', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
       await expectRevert(ballot.votesOf(100), 'Candidate doesn\'t exist.');
     });
 
     it('vote_no_candidate', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
       await expectRevert(ballot.vote(100, { from: accountA }), 'Candidate doesn\'t exist.');
     });
 
     it('vote_again', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
       await ballot.vote(1);
       await ballot.vote(0);
       expect(await ballot.votesOf(1)).to.be.bignumber.equal('0');
@@ -55,7 +65,8 @@ contract('Ballot', function (accounts) {
 
     it('lots_of_votes', async function () {
       const votes = Math.floor(Math.random() * 300) + 100;
-      ballot = await Ballot.new(['A', 'B', 'C', 'D', 'F'], votes, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['A', 'B', 'C', 'D', 'F'], votes, { from: owner });
 
       for (let i = 0; i < votes; i++) {
         const vote = Math.floor(Math.random() * 5);
@@ -74,7 +85,8 @@ contract('Ballot', function (accounts) {
     });
 
     it('no_votes', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
 
       await time.advanceBlock();
       await time.advanceBlock();
@@ -102,7 +114,8 @@ contract('Ballot', function (accounts) {
     });
 
     it('vote_after_closed', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });
 
       await ballot.vote(0, { from: accountA });
       await ballot.vote(1, { from: accountB });
@@ -119,7 +132,8 @@ contract('Ballot', function (accounts) {
     });
 
     it('votes_in_order_odd', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });
 
       await ballot.vote(0, { from: accountA });
       await ballot.vote(1, { from: accountB });
@@ -130,22 +144,24 @@ contract('Ballot', function (accounts) {
     });
 
     it('votes_in_order_even', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb', 'Hastur'], 10, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb', 'Hastur'], 10, { from: owner });
 
       await ballot.vote(0, { from: accountA });
       await ballot.vote(1, { from: accountB });
       await ballot.vote(1, { from: accountC });
       await ballot.vote(2, { from: accountD });
-      await ballot.vote(2, { from: accountC });
-      await ballot.vote(2, { from: accountD });
-      await ballot.vote(3, { from: accountE });
-      await ballot.vote(3, { from: accountF });
+      await ballot.vote(2, { from: accountE });
+      await ballot.vote(2, { from: accountF });
       await ballot.vote(3, { from: accountG });
       await ballot.vote(3, { from: accountH });
+      await ballot.vote(3, { from: accountI });
+      await ballot.vote(3, { from: accountJ });
     });
 
     it('votes_reverse_order_odd', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });
 
       await ballot.vote(2, { from: accountA });
       await ballot.vote(2, { from: accountB });
@@ -156,28 +172,31 @@ contract('Ballot', function (accounts) {
     });
 
     it('votes_reverse_order_even', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb', 'Hastur'], 10, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb', 'Hastur'], 10, { from: owner });
 
       await ballot.vote(3, { from: accountA });
       await ballot.vote(3, { from: accountB });
       await ballot.vote(3, { from: accountC });
       await ballot.vote(3, { from: accountD });
-      await ballot.vote(2, { from: accountC });
-      await ballot.vote(2, { from: accountD });
       await ballot.vote(2, { from: accountE });
-      await ballot.vote(1, { from: accountF });
-      await ballot.vote(1, { from: accountG });
-      await ballot.vote(0, { from: accountH });
+      await ballot.vote(2, { from: accountF });
+      await ballot.vote(2, { from: accountG });
+      await ballot.vote(1, { from: accountH });
+      await ballot.vote(1, { from: accountI });
+      await ballot.vote(0, { from: accountJ });
     });
 
     // Winner tests
     it('winners_poll_not_closed', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
       await expectRevert(ballot.winners(), 'This poll is not closed yet.');
     });
 
     it('one_winner_normal_close', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
 
       await ballot.vote(0, { from: accountA });
       await ballot.vote(1, { from: accountB });
@@ -190,7 +209,8 @@ contract('Ballot', function (accounts) {
     });
 
     it('one_winner_forced_close', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
 
       await ballot.vote(0, { from: accountA });
       await ballot.vote(1, { from: accountB });
@@ -203,7 +223,8 @@ contract('Ballot', function (accounts) {
     });
 
     it('already_closed', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
 
       await ballot.vote(0, { from: accountA });
       await ballot.vote(1, { from: accountB });
@@ -215,7 +236,8 @@ contract('Ballot', function (accounts) {
     });
 
     it('two_winners_normal_close', async function () {
-      ballot = await Ballot.new(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
 
       await ballot.vote(1, { from: accountA });
       await ballot.vote(1, { from: accountB });
