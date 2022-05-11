@@ -2,20 +2,8 @@ const { BN, expectEvent, expectRevert, time } = require('@openzeppelin/test-help
 const { expect, assert } = require('chai');
 
 const LOG_MODE = false;
-// const QuickSort = artifacts.require('QuickSort.sol');
+const QuickSort = artifacts.require('QuickSort.sol');
 const Ballot = artifacts.require('Ballot');
-
-// async function doDeploy (deployer) {
-//   await deployer.deploy(QuickSort);
-//   await deployer.link(QuickSort, Ballot);
-//   await deployer.deploy(Ballot);
-// }
-
-// module.exports = function (deployer) {
-//   return deployer.then(async () => {
-//     await doDeploy(deployer);
-//   });
-// };
 
 contract('Ballot', function (accounts) {
   const [ owner,
@@ -26,6 +14,8 @@ contract('Ballot', function (accounts) {
     let ballot;
 
     before(async () => {
+      const quickSort = await QuickSort.new();
+      await Ballot.link(quickSort);
     });
 
     it('initializer', async function () {

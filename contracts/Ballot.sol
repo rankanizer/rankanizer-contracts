@@ -12,7 +12,6 @@ import "./Votable.sol";
 /// @author FVB
 /// @title  Ballot
 contract Ballot is Votable, Initializable, OwnableUpgradeable {
-    using QuickSort for uint256[];
     using AddressUpgradeable for address;
     using EnumerableVotersMap for EnumerableVotersMap.Map;
     using EnumerableVotersMap for EnumerableVotersMap.Voter;
