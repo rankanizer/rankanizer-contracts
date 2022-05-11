@@ -4,24 +4,28 @@ pragma solidity ^0.8.3;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "./QuickSort.sol";
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "./utils/EnumerableVotersMap.sol";
+import "./utils/QuickSort.sol";
+import "./Votable.sol";
 
 /// @author FVB
 /// @title  Ballot
-contract Ballot is Initializable, OwnableUpgradeable {
+contract Ballot is Votable, Initializable, OwnableUpgradeable {
+    using QuickSort for uint256[];
+    using AddressUpgradeable for address;
+    using EnumerableVotersMap for EnumerableVotersMap.Map;
+    using EnumerableVotersMap for EnumerableVotersMap.Voter;
+
     string[] private _candidates;
     uint256[] private _votes;
-    uint256[] private _winners;
+    Group[] private _winners;
+    Group _group;
 
     uint256 private _expire;
     bool private _finished;
 
-    struct Voter {
-        bool voted;
-        uint256 vote;
-    }
-
-    mapping(address => Voter) public voters;
+    EnumerableVotersMap.Map private _voters;
 
     function initialize(string[] memory candidates, uint256 newDuration) external initializer {
         __Ballot_init(candidates, newDuration);
@@ -44,8 +48,6 @@ contract Ballot is Initializable, OwnableUpgradeable {
         _finished = false;
     }
 
-    event PollClosed(uint256[] winners);
-
     modifier didNotExpire() {
         require(_expire >= block.number, "This poll is closed. No more votes allowed");
         _;
@@ -59,21 +61,23 @@ contract Ballot is Initializable, OwnableUpgradeable {
         _;
     }
 
-    function vote(uint256 candidateIndex) public didNotExpire {
+    function vote(uint256[] memory ranking) external override didNotExpire {
+        require(ranking.length == 1, "Voting must be for only one candidate.");
+        uint256 candidateIndex = ranking[0];
         require(candidateIndex < _candidates.length, "Candidate doesn't exist.");
 
-        Voter storage voter = voters[msg.sender];
+        EnumerableVotersMap.Voter storage voter = _voters.getUnchecked(msg.sender);
 
         if (!voter.voted) {
             _votes[candidateIndex]++;
-            voters[msg.sender].voted = true;
+            voter.voted = true;
         } else {
             unchecked {
-                _votes[voters[msg.sender].vote]--;
+                _votes[voter.vote]--;
                 _votes[candidateIndex]++;
             }
         }
-        voters[msg.sender].vote = candidateIndex;
+        voter.vote = candidateIndex;
     }
 
     function closePoll() public {
@@ -90,35 +94,40 @@ contract Ballot is Initializable, OwnableUpgradeable {
             ref[i] = i;
         }
 
-        QuickSort sort = new QuickSort();
-        uint256[] memory temp = sort.sort(_votes, ref);
+        uint256[] memory temp = QuickSort.sortRef(_votes, ref);
 
         uint256 winnerVotes = _votes[temp[0]];
 
-        for (uint256 i = 0; i < temp.length; i++) {
-            if (_votes[temp[i]] == winnerVotes) _winners.push(temp[i]);
+        _group.place = 1;
+        _group.candidates.push(temp[0]);
+        _winners.push(_group);
+
+        for (uint256 i = 1; i < temp.length; i++) {
+            if (_votes[temp[i]] == winnerVotes) {
+                _winners[0].candidates.push(temp[i]);
+            }
             else break;
         }
     }
 
-    function votesOf(uint256 candidateIndex) public view returns (uint256) {
+    function votesOf(uint256 candidateIndex) external override view returns (uint256) {
         require(candidateIndex < _candidates.length, "Candidate doesn't exist.");
         return _votes[candidateIndex];
     }
 
-    function votes() public view returns (uint256[] memory) {
+    function votes() external override view returns (uint256[] memory) {
         return _votes;
     }
 
-    function winners() public view didExpire returns (uint256[] memory) {
+    function winners() external override view didExpire returns (Group[] memory) {
         return _winners;
     }
 
-    function expire() public view returns (uint256) {
+    function expire() external override view returns (uint256) {
         return _expire;
     }
 
-    function finished() public view returns (bool) {
+    function finished() external override view returns (bool) {
         return _finished;
     }
 
