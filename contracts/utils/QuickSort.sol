@@ -6,11 +6,11 @@ library QuickSort {
 
     // Sort array based on a reference array
     function sortRef(uint256[] memory data, uint256[] memory ref) public pure returns (uint256[] memory) {
-        _quickSortRef(data, ref, int256(0), int256(data.length - 1));
+        quickSortRef(data, ref, int256(0), int256(data.length - 1));
         return ref;
     }
 
-    function _quickSortRef(
+    function quickSortRef(
         uint256[] memory arr,
         uint256[] memory ref,
         int256 left,
@@ -28,17 +28,17 @@ library QuickSort {
                 j--;
             }
         }
-        if (left < j) _quickSortRef(arr, ref, left, j);
-        if (i < right) _quickSortRef(arr, ref, i, right);
+        if (left < j) quickSortRef(arr, ref, left, j);
+        if (i < right) quickSortRef(arr, ref, i, right);
     }
     
     // Sort array based on it's own values
     function sort(uint256[] memory data) public pure returns (uint256[] memory) {
-        _quickSort(data, int256(0), int256(data.length - 1));
+        quickSort(data, int256(0), int256(data.length - 1));
         return data;
     }
 
-    function _quickSort(
+    function quickSort(
         uint256[] memory arr,
         int256 left,
         int256 right
@@ -55,7 +55,7 @@ library QuickSort {
                 j--;
             }
         }
-        if (left < j) _quickSort(arr, left, j);
-        if (i < right) _quickSort(arr, i, right);
+        if (left < j) quickSort(arr, left, j);
+        if (i < right) quickSort(arr, i, right);
     }
 }
