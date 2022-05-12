@@ -28,7 +28,7 @@ library EnumerableVotersMap {
 
     struct Voter {
         bool voted;
-        uint256 vote;
+        uint256[] vote;
         uint256[10] __gap;
     }
 

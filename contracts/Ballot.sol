@@ -16,26 +16,30 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     using EnumerableVotersMap for EnumerableVotersMap.Map;
     using EnumerableVotersMap for EnumerableVotersMap.Voter;
 
-    string[] private _candidates;
+    string[] internal _candidates;
     uint256[] private _votes;
-    Group[] private _winners;
-    Group _group;
+    Group[] internal _winners;
 
-    uint256 private _expire;
-    bool private _finished;
+    // TODO remove
+    Group internal _group;
 
-    EnumerableVotersMap.Map private _voters;
+    uint256 internal _expire;
+    bool internal _finished;
+
+    EnumerableVotersMap.Map internal _voters;
 
     function initialize(string[] memory candidates, uint256 newDuration) external initializer {
         __Ballot_init(candidates, newDuration);
     }
 
+    // solhint-disable-next-line func-name-mixedcase
     function __Ballot_init(string[] memory candidates, uint256 newDuration) internal {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __Ballot_init_unchained(candidates, newDuration);
     }
 
+    // solhint-disable-next-line func-name-mixedcase
     function __Ballot_init_unchained(string[] memory candidates, uint256 newDuration) internal {
         require(candidates.length > 1, "The list of candidates should have at least two elements");
         require(newDuration > 0, "The duration of the poll must be greater than zero");
@@ -60,7 +64,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         _;
     }
 
-    function vote(uint256[] memory ranking) external override didNotExpire {
+    function vote(uint256[] memory ranking) external virtual override didNotExpire {
         require(ranking.length == 1, "Voting must be for only one candidate.");
         uint256 candidateIndex = ranking[0];
         require(candidateIndex < _candidates.length, "Candidate doesn't exist.");
@@ -68,15 +72,17 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         EnumerableVotersMap.Voter storage voter = _voters.getUnchecked(msg.sender);
 
         if (!voter.voted) {
-            _votes[candidateIndex]++;
-            voter.voted = true;
+            unchecked {
+                _votes[candidateIndex]++;
+                voter.voted = true;
+            }
         } else {
             unchecked {
-                _votes[voter.vote]--;
+                _votes[voter.vote[0]]--;
                 _votes[candidateIndex]++;
             }
         }
-        voter.vote = candidateIndex;
+        voter.vote = [candidateIndex];
     }
 
     function closePoll() public {
@@ -104,29 +110,28 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         for (uint256 i = 1; i < temp.length; i++) {
             if (_votes[temp[i]] == winnerVotes) {
                 _winners[0].candidates.push(temp[i]);
-            }
-            else break;
+            } else break;
         }
     }
 
-    function votesOf(uint256 candidateIndex) external override view returns (uint256) {
+    function votesOf(uint256 candidateIndex) external view override returns (uint256) {
         require(candidateIndex < _candidates.length, "Candidate doesn't exist.");
         return _votes[candidateIndex];
     }
 
-    function votes() external override view returns (uint256[] memory) {
+    function votes() external view override returns (uint256[] memory) {
         return _votes;
     }
 
-    function winners() external override view didExpire returns (Group[] memory) {
+    function winners() external view override didExpire returns (Group[] memory) {
         return _winners;
     }
 
-    function expire() external override view returns (uint256) {
+    function expire() external view override returns (uint256) {
         return _expire;
     }
 
-    function finished() external override view returns (bool) {
+    function finished() external view override returns (bool) {
         return _finished;
     }
 

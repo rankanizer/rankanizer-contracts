@@ -6,31 +6,26 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./Ballot.sol";
 
-contract CondorcetVoting is Initializable, OwnableUpgradeable {
-
-    struct Ranker {
-        bool ranked;
-        uint256[] ranking;
-    }
-
-    string[] private _candidates;
+contract CondorcetVoting is Ballot {
+    using AddressUpgradeable for address;
+    using EnumerableVotersMap for EnumerableVotersMap.Map;
+    using EnumerableVotersMap for EnumerableVotersMap.Voter;
 
     // TODO possible optimization: main diagonal is not used
     uint256[][] private _rank;
-
-    // TODO change to enumerable map
-    mapping(address => Ranker) public voters;
 
     function initialize(string[] memory candidates) external initializer {
         __Condorcet_init(candidates);
     }
 
+    // solhint-disable-next-line func-name-mixedcase
     function __Condorcet_init(string[] memory candidates) internal {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __Condorcet_init_unchained(candidates);
     }
 
+    // solhint-disable-next-line func-name-mixedcase
     function __Condorcet_init_unchained(string[] memory candidates) internal {
         require(candidates.length > 1, "The list of candidates should have at least two elements");
 
@@ -39,25 +34,24 @@ contract CondorcetVoting is Initializable, OwnableUpgradeable {
 
         _rank = new uint256[][](n);
         for (uint256 i = 0; i < n; i++) {
-            _rank[i] = new uint[](n);
+            _rank[i] = new uint256[](n);
         }
     }
 
-    function vote(uint256[] memory userRanking) public {
+    function vote(uint256[] memory userRanking) public override {
+        EnumerableVotersMap.Voter storage ranker = _voters.getUnchecked(msg.sender);
 
-        Ranker storage ranker = voters[msg.sender];
-
-        if (!ranker.ranked) {
+        if (!ranker.voted) {
             for (uint256 i = 0; i < userRanking.length; i++) {
-                for (uint256 j = i+1; j < userRanking.length; j++) {
+                for (uint256 j = i + 1; j < userRanking.length; j++) {
                     if (j != userRanking[i]) {
                         _rank[userRanking[i]][j] += 1;
                     }
                 }
             }
-            ranker.ranking = userRanking;
-            ranker.ranked = true;
-        } 
+            ranker.vote = userRanking;
+            ranker.voted = true;
+        }
         // TODO if already voted, redo the vote
     }
 }

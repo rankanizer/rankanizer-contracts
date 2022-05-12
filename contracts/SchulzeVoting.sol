@@ -27,7 +27,6 @@ import "./utils/QuickSort.sol";
  *    In this example B and C win, C and E tie for third, and A comes in last.
  */
 contract SchulzeVoting {
-
     struct Group {
         uint256 place;
         uint256[] indexes;
@@ -45,14 +44,17 @@ contract SchulzeVoting {
         return a <= b ? a : b;
     }
 
-    function run (uint256 n, uint256[][] memory ballots) public /** pure */ returns (Group[] memory) {
+    function run(
+        uint256 n,
+        uint256[][] memory ballots /** pure */
+    ) public returns (Group[] memory) {
         // Initialize some tables
         uint256[][] memory d = new uint256[][](n);
         uint256[][] memory p = new uint256[][](n);
 
         for (uint256 i = 0; i < n; i++) {
-            d[i] = new uint[](ballots.length);
-            p[i] = new uint[](ballots.length);
+            d[i] = new uint256[](ballots.length);
+            p[i] = new uint256[](ballots.length);
         }
 
         // Record preferences for each matchup
@@ -85,13 +87,13 @@ contract SchulzeVoting {
         // Explore alternate paths
         for (uint256 i = 0; i < n; i++) {
             for (uint256 j = 0; j < n; j++) {
-            if (i != j) {
-                for (uint256 k = 0; k < n; k++) {
-                    if (i != k && j != k) {
-                        p[j][k] = _max(p[j][k], _min(p[j][i], p[i][k]));
+                if (i != j) {
+                    for (uint256 k = 0; k < n; k++) {
+                        if (i != k && j != k) {
+                            p[j][k] = _max(p[j][k], _min(p[j][i], p[i][k]));
+                        }
                     }
                 }
-            }
             }
         }
 
@@ -99,9 +101,9 @@ contract SchulzeVoting {
         uint256[] memory wins = new uint256[](n);
         for (uint256 i = 0; i < n; i++) {
             for (uint256 j = 0; j < n; j++) {
-            if (i != j && p[i][j] > p[j][i]) {
-                wins[i]++;
-            }
+                if (i != j && p[i][j] > p[j][i]) {
+                    wins[i]++;
+                }
             }
         }
 
@@ -148,15 +150,17 @@ contract SchulzeVoting {
     // };
 
     /**
-    * Takes in some ranks, e.g. [3, 1, 2, 1, 2],
-    * and returns groups with places, e.g.
-    *  [
-    *    { place: 1, indexes: [1, 3] },
-    *    { place: 3, indexes: [2, 4] },
-    *    { place: 5, indexes: [0] }
-    *  ]
-    */
-    function ranksToGroups (uint256[] memory ranks) public /** pure */ returns (Group[] memory) {
+     * Takes in some ranks, e.g. [3, 1, 2, 1, 2],
+     * and returns groups with places, e.g.
+     *  [
+     *    { place: 1, indexes: [1, 3] },
+     *    { place: 3, indexes: [2, 4] },
+     *    { place: 5, indexes: [0] }
+     *  ]
+     */
+    function ranksToGroups(
+        uint256[] memory ranks /** pure */
+    ) public returns (Group[] memory) {
         uint256 n = ranks.length;
         uint256[] memory byRank = new uint256[](n);
 
@@ -174,12 +178,12 @@ contract SchulzeVoting {
         _result.push(_group);
         for (uint256 i = 1; i < temp.length; i++) {
             place++;
-            if (temp[i] != temp[i-1]) {
+            if (temp[i] != temp[i - 1]) {
                 _group.place = place;
                 _group.indexes.push(temp[i]);
                 _result.push(_group);
             } else {
-                _result[_result.length-1].indexes.push(temp[i]);
+                _result[_result.length - 1].indexes.push(temp[i]);
             }
         }
         return _result;

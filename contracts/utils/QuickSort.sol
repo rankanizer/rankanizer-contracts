@@ -3,19 +3,18 @@
 pragma solidity ^0.8.3;
 
 library QuickSort {
-
     // Sort array based on a reference array
     function sortRef(uint256[] memory data, uint256[] memory ref) public pure returns (uint256[] memory) {
-        quickSortRef(data, ref, int256(0), int256(data.length - 1));
+        _quickSortRef(data, ref, int256(0), int256(data.length - 1));
         return ref;
     }
 
-    function quickSortRef(
+    function _quickSortRef(
         uint256[] memory arr,
         uint256[] memory ref,
         int256 left,
         int256 right
-    ) internal pure {
+    ) private pure {
         int256 i = left;
         int256 j = right;
         uint256 pivot = arr[ref[uint256(left + (right - left) / 2)]];
@@ -28,21 +27,21 @@ library QuickSort {
                 j--;
             }
         }
-        if (left < j) quickSortRef(arr, ref, left, j);
-        if (i < right) quickSortRef(arr, ref, i, right);
+        if (left < j) _quickSortRef(arr, ref, left, j);
+        if (i < right) _quickSortRef(arr, ref, i, right);
     }
-    
+
     // Sort array based on it's own values
     function sort(uint256[] memory data) public pure returns (uint256[] memory) {
-        quickSort(data, int256(0), int256(data.length - 1));
+        _quickSort(data, int256(0), int256(data.length - 1));
         return data;
     }
 
-    function quickSort(
+    function _quickSort(
         uint256[] memory arr,
         int256 left,
         int256 right
-    ) internal pure {
+    ) private pure {
         int256 i = left;
         int256 j = right;
         uint256 pivot = arr[uint256(left + (right - left) / 2)];
@@ -55,7 +54,7 @@ library QuickSort {
                 j--;
             }
         }
-        if (left < j) quickSort(arr, left, j);
-        if (i < right) quickSort(arr, i, right);
+        if (left < j) _quickSort(arr, left, j);
+        if (i < right) _quickSort(arr, i, right);
     }
 }

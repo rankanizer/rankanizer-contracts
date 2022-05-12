@@ -3,7 +3,6 @@
 pragma solidity ^0.8.3;
 
 interface Votable {
-
     struct Voter {
         bool voted;
         uint256[] vote;
@@ -27,5 +26,4 @@ interface Votable {
     function expire() external view returns (uint256);
 
     function finished() external view returns (bool);
-
 }
