@@ -27,12 +27,14 @@ contract Ballot is Initializable, OwnableUpgradeable {
         __Ballot_init(candidates, newDuration);
     }
 
+    // solhint-disable-next-line func-name-mixedcase
     function __Ballot_init(string[] memory candidates, uint256 newDuration) internal {
         __Context_init_unchained();
         __Ownable_init_unchained();
         __Ballot_init_unchained(candidates, newDuration);
     }
 
+    // solhint-disable-next-line func-name-mixedcase
     function __Ballot_init_unchained(string[] memory candidates, uint256 newDuration) internal {
         require(candidates.length > 1, "The list of candidates should have at least two elements");
         require(newDuration > 0, "The duration of the poll must be greater than zero");
