@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - main
       - release-v*
   pull_request: {}
   workflow_dispatch: {}
