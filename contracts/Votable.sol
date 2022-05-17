@@ -2,7 +2,11 @@
 
 pragma solidity ^0.8.3;
 
+/**
+ * @dev Interface for the voting systems
+ */
 interface Votable {
+
     struct Voter {
         bool voted;
         uint256[] vote;
@@ -14,6 +18,8 @@ interface Votable {
     }
 
     event PollClosed(Group[] winners);
+
+    function closePoll() external;
 
     function vote(uint256[] memory ranking) external;
 

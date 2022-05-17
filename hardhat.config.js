@@ -61,10 +61,14 @@ module.exports = {
     hardhat: {
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: !withOptimizations,
+      accounts: {
+        count: 51,
+      },
     },
   },
   gasReporter: {
     currency: 'USD',
     outputFile: argv.ci ? 'gas-report.txt' : undefined,
+    coinmarketcap: '9df4ffdf-4a88-47c3-95e9-bf4201f07385',
   },
 };

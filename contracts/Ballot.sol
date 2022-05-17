@@ -9,8 +9,9 @@ import "./utils/EnumerableVotersMap.sol";
 import "./utils/QuickSort.sol";
 import "./Votable.sol";
 
-/// @author FVB
-/// @title  Ballot
+/**
+ * @dev Traditional voting system
+ */
 contract Ballot is Votable, Initializable, OwnableUpgradeable {
     using AddressUpgradeable for address;
     using EnumerableVotersMap for EnumerableVotersMap.Map;
@@ -20,15 +21,15 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     uint256[] private _votes;
     Group[] internal _winners;
 
-    // TODO remove
-    Group internal _group;
-
+    // Expiration block
     uint256 internal _expire;
+
+    // Poll closed
     bool internal _finished;
 
     EnumerableVotersMap.Map internal _voters;
 
-    function initialize(string[] memory candidates, uint256 newDuration) external initializer {
+    function initialize(string[] memory candidates, uint256 newDuration) external virtual initializer {
         __Ballot_init(candidates, newDuration);
     }
 
@@ -51,6 +52,9 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         _finished = false;
     }
 
+    /**
+     * @dev checks if poll is still open. If expired, close the poll afterwards.
+     */
     modifier didNotExpire() {
         require(_expire >= block.number, "This poll is closed. No more votes allowed");
         _;
@@ -59,11 +63,23 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         }
     }
 
+    /**
+     * @dev checks if poll didn't expire.
+     */
     modifier didExpire() {
         require(_expire <= block.number, "This poll is not closed yet.");
         _;
     }
 
+    /**
+     * @dev Register the `ranking` of the account
+     *
+     * Requirements:
+     *
+     * - `ranking` must have only one elemnent.
+     * - the voted candidate must exist.
+     *
+     */
     function vote(uint256[] memory ranking) external virtual override didNotExpire {
         require(ranking.length == 1, "Voting must be for only one candidate.");
         uint256 candidateIndex = ranking[0];
@@ -85,52 +101,101 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         voter.vote = [candidateIndex];
     }
 
-    function closePoll() public {
+    /**
+     * @dev Closes the poll for voting
+     *
+     * Emits a {PollClosed} event.
+     */
+    function closePoll() public virtual override {
         require(!_finished, "This poll is closed already");
         _finished = true;
         _calculateWinners();
         emit PollClosed(_winners);
     }
 
-    function _calculateWinners() internal {
+    /**
+     * @dev Calculates `_winners` and returns true if succesful.
+     *
+     */
+    function _calculateWinners() internal virtual returns (bool) {
+        if (_numberOfVotes() == 0) return false;
+
         uint256[] memory ref = new uint256[](_votes.length);
+        QuickSort.sortRef(_votes, ref);
 
-        for (uint256 i = 0; i < _votes.length; i++) {
-            ref[i] = i;
-        }
+        uint256 winnerVotes = _votes[ref[0]];
 
-        uint256[] memory temp = QuickSort.sortRef(_votes, ref);
+        // Temporary memory array to avoid the use of a storage variable
+        uint256[] memory temp = new uint256[](_candidates.length);
+        uint256 size = 0;
 
-        uint256 winnerVotes = _votes[temp[0]];
-
-        _group.place = 1;
-        _group.candidates.push(temp[0]);
-        _winners.push(_group);
-
-        for (uint256 i = 1; i < temp.length; i++) {
-            if (_votes[temp[i]] == winnerVotes) {
-                _winners[0].candidates.push(temp[i]);
+        for (uint256 i = 0; i < ref.length; i++) {
+            if (_votes[ref[i]] == winnerVotes) {
+                temp[size++] = ref[i];
             } else break;
         }
+
+        // Updates the _winners array
+        Group memory group;
+        group.place = 1;
+        group.candidates = new uint256[](size);
+        for (uint256 i = 0; i < size; i++) {
+            group.candidates[i] = temp[i];
+        }
+        _winners.push(group);
+
+        return true;
     }
 
+    /**
+     * @dev Calculates and returns the number of votes casted
+     */
+    function _numberOfVotes() internal view returns (uint256) {
+        uint256 qty = 0;
+        for (uint256 i = 0; i < _votes.length; i++) {
+            qty += _votes[i];
+        }
+
+        return qty;
+    }
+
+    /**
+     * @dev Returns the votes of `candidateIndex`
+     *
+     * Requirements:
+     *
+     * - `candidateIndex must be a valid candidate
+     *
+     */
     function votesOf(uint256 candidateIndex) external view override returns (uint256) {
         require(candidateIndex < _candidates.length, "Candidate doesn't exist.");
         return _votes[candidateIndex];
     }
 
+    /**
+     * @dev Returns the votes of all candidates
+     */
     function votes() external view override returns (uint256[] memory) {
         return _votes;
     }
 
+    /**
+     * @dev Returns the list of winners
+     */
     function winners() external view override didExpire returns (Group[] memory) {
         return _winners;
     }
 
+    /**
+     * @dev Returns the expiration block
+     */
     function expire() external view override returns (uint256) {
         return _expire;
     }
 
+    /**
+     * @dev Returns the status of the poll
+     */
     function finished() external view override returns (bool) {
         return _finished;
     }

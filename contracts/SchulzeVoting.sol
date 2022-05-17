@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: GPL-3.0
+
 pragma solidity ^0.8.3;
 
 import "./utils/QuickSort.sol";
+import "./CondorcetVoting.sol";
 
 /*
  * n - The number of candidates in the election.
@@ -26,15 +29,24 @@ import "./utils/QuickSort.sol";
  *
  *    In this example B and C win, C and E tie for third, and A comes in last.
  */
-contract SchulzeVoting {
-    struct Group {
-        uint256 place;
-        uint256[] indexes;
+
+ /**
+ * @dev Schulze Voting System. 
+ *      If there is no Condorce winner, it calculates a Schulze Winner by weighing other paths
+ *      between each pair of candidates.
+ */
+contract SchulzeVoting is CondorcetVoting {
+    function initialize(string[] memory candidates, uint256 newDuration) external override initializer {
+        __SchulzeVoting_init(candidates, newDuration);
     }
 
-    Group _group;
-
-    Group[] _result;
+    // solhint-disable-next-line func-name-mixedcase
+    function __SchulzeVoting_init(string[] memory candidates, uint256 newDuration) internal {
+        __Context_init_unchained();
+        __Ownable_init_unchained();
+        __Ballot_init_unchained(candidates, newDuration);
+        __CondorcetVoting_init_unchained(candidates);
+    }
 
     function _max(uint256 a, uint256 b) internal pure returns (uint256) {
         return a >= b ? a : b;
@@ -44,41 +56,37 @@ contract SchulzeVoting {
         return a <= b ? a : b;
     }
 
-    function run(
-        uint256 n,
-        uint256[][] memory ballots /** pure */
-    ) public returns (Group[] memory) {
-        // Initialize some tables
-        uint256[][] memory d = new uint256[][](n);
-        uint256[][] memory p = new uint256[][](n);
+    /**
+     * @dev It tries to find a Condorcet winner. If there isn't one, calculate Schulze winner(s)
+     */
+    function _calculateWinners() internal virtual override returns (bool) {
+        if (!super._calculateWinners()) {
+            return _runSchulzeVoting();
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * @dev Calculats Schulze winner(s) returning a ranked list: { place: 1, indexes: [1, 3] }
+     */
+    function _runSchulzeVoting() internal returns (bool) {
+        uint256 n = _rank.length;
+
+        // Paths Matrix
+        uint256[][] memory path = new uint256[][](n);
 
         for (uint256 i = 0; i < n; i++) {
-            d[i] = new uint256[](ballots.length);
-            p[i] = new uint256[](ballots.length);
+            path[i] = new uint256[](n);
         }
-
-        // Record preferences for each matchup
-        for (uint256 k = 0; k < n; k++) {
-            for (uint256 i = 0; i < n; i++) {
-                for (uint256 j = 0; j < n; j++) {
-                    if (i != j) {
-                        // For each distinct pair of candidates, record each preference
-                        if (ballots[k][i] < ballots[k][j]) {
-                            d[i][j]++;
-                        }
-                    }
-                }
-            }
-        }
-
         // Calculate strongest paths (Floyd-Warshall algorithm)
 
         // Initialize trivial paths
         for (uint256 i = 0; i < n; i++) {
             for (uint256 j = 0; j < n; j++) {
                 if (i != j) {
-                    if (d[i][j] > d[j][i]) {
-                        p[i][j] = d[i][j];
+                    if (_rank[i][j] > _rank[j][i]) {
+                        path[i][j] = _rank[i][j];
                     }
                 }
             }
@@ -90,7 +98,7 @@ contract SchulzeVoting {
                 if (i != j) {
                     for (uint256 k = 0; k < n; k++) {
                         if (i != k && j != k) {
-                            p[j][k] = _max(p[j][k], _min(p[j][i], p[i][k]));
+                            path[j][k] = _max(path[j][k], _min(path[j][i], path[i][k]));
                         }
                     }
                 }
@@ -101,56 +109,19 @@ contract SchulzeVoting {
         uint256[] memory wins = new uint256[](n);
         for (uint256 i = 0; i < n; i++) {
             for (uint256 j = 0; j < n; j++) {
-                if (i != j && p[i][j] > p[j][i]) {
+                if (i != j && path[i][j] > path[j][i]) {
                     wins[i]++;
                 }
             }
         }
 
-        // Rank the candidates by wins
-        return ranksToGroups(wins);
+        ranksToGroups(wins);
+
+        return true;
     }
 
-    // /*
-    // * Accepts the same arguments as run, and checks if they are valid.
-    // * Returns a iterable stream of error strings. If no errors are returned,
-    // * the arguments are valid.
-    // */
-    // exports.validate = function*(candidates, ballots) {
-    // let n = null;
-    // if (candidates instanceof Array) {
-    //     n = candidates.length;
-    //     for (const c of candidates) {
-    //     if (typeof c !== "string") {
-    //         yield "each candidate must be a string";
-    //     }
-    //     }
-    // } else {
-    //     yield "candidates must be an array";
-    // }
-
-    // if (ballots instanceof Array) {
-    //     for (const b of ballots) {
-    //     if (b instanceof Array) {
-    //         if (n !== null && b.length !== n) {
-    //         yield "each ballot must contain a rank for each candidate";
-    //         }
-    //         for (const r of b) {
-    //         if (typeof r !== "number") {
-    //             yield "each candidate in a ballot must be given a number";
-    //         }
-    //         }
-    //     } else {
-    //         yield "each ballot must be an array";
-    //     }
-    //     }
-    // } else {
-    //     yield "ballots must be an array";
-    // }
-    // };
-
     /**
-     * Takes in some ranks, e.g. [3, 1, 2, 1, 2],
+     * @dev Takes in some `ranks`, e.g. [3, 1, 2, 1, 2],
      * and returns groups with places, e.g.
      *  [
      *    { place: 1, indexes: [1, 3] },
@@ -164,44 +135,34 @@ contract SchulzeVoting {
         uint256 n = ranks.length;
         uint256[] memory byRank = new uint256[](n);
 
-        for (uint256 i = 0; i < n; i++) {
-            byRank[ranks[i]] = i;
-        }
+        Group memory group;
 
-        uint256[] memory temp = QuickSort.sort(byRank);
+        // Temporary memory array to avoid the use of a storage variable
+        uint256[] memory temp = new uint256[](_candidates.length);
+        uint256 size = 0;
+
+        QuickSort.sortRef(ranks, byRank);
 
         uint256 place = 1;
+        group.place = place;
+        temp[size++] = byRank[0];
 
-        // TODO Change to memory
-        _group.place = place;
-        _group.indexes.push(temp[0]);
-        _result.push(_group);
-        for (uint256 i = 1; i < temp.length; i++) {
+        for (uint256 i = 1; i < byRank.length; i++) {
             place++;
-            if (temp[i] != temp[i - 1]) {
-                _group.place = place;
-                _group.indexes.push(temp[i]);
-                _result.push(_group);
+            if (ranks[byRank[i]] != ranks[byRank[i - 1]]) {
+                break;
             } else {
-                _result[_result.length - 1].indexes.push(temp[i]);
+                temp[size++] = byRank[i];
             }
         }
-        return _result;
+
+        group.candidates = new uint256[](size);
+        for (uint256 i = 0; i < size; i++) {
+            group.candidates[i] = temp[i];
+        }
+        _winners.push(group);
+        return _winners;
     }
 
-    // /**
-    // * Takes a total number of candidates, and an ordering grouping, e.g.
-    // * groupsToRanks(5, [[0, 2], [1, 4]]), and returns a rank for each candidate, e.g.
-    // * [1, 2, 1, 3, 2]. Note that missing candidates are
-    // * assumed to be ranked last.
-    // */
-    // exports.groupsToRanks = (n, groups) => {
-    // const ranks = Array(n).fill(groups.length + 1);
-    // groups.forEach((group, i) => {
-    //     group.forEach(index => {
-    //     ranks[index] = i + 1;
-    //     });
-    // });
-    // return ranks;
-    // };
+    uint256[50] private __gap;
 }
