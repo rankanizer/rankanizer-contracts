@@ -65,18 +65,6 @@ contract('Ballot', function (accounts) {
       await expectRevert(ballot.vote([0, 1], { from: accountA }), 'Voting must be for only one candidate.');
     });
 
-    it('lots of votes', async function () {
-      const votes = Math.floor(Math.random() * 40) + 10;
-      ballot = await Ballot.new();
-      await ballot.initialize(['A', 'B', 'C', 'D', 'F'], votes, { from: owner });
-
-      for (let i = 0; i < votes; i++) {
-        const vote = Math.floor(Math.random() * 5);
-        const voter = Math.floor(Math.random() * accounts.length);
-        await ballot.vote([vote], { from: accounts[voter] });
-      }
-    });
-
     it('no votes', async function () {
       ballot = await Ballot.new();
       await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
@@ -92,7 +80,6 @@ contract('Ballot', function (accounts) {
       assert.equal(receipt.receipt.logs[0].args.winners.length, 0);
     });
 
-    // .only, .except
     it('vote after closed', async function () {
       ballot = await Ballot.new();
       await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });

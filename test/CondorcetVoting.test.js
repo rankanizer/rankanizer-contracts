@@ -64,21 +64,6 @@ contract('CondorcetVoting', function (accounts) {
       assert.equal(receipt.receipt.logs[0].args.winners[0].candidates[0], '2');
     });
 
-    it('lots of votes', async function () {
-      const votes = Math.floor(Math.random() * 40) + 10;
-      ballot = await CondorcetVoting.new();
-      await ballot.initialize(['A', 'B', 'C', 'D'], votes, { from: owner });
-
-      for (let i = 0; i < votes; i++) {
-        const ranks = [];
-        for (let j = 0; j < 4; j++) {
-          ranks[j] = Math.floor(Math.random() * 4);
-        }
-        const voter = Math.floor(Math.random() * accounts.length);
-        await ballot.vote(ranks, { from: accounts[voter] });
-      }
-    });
-
     it('no votes', async function () {
       ballot = await CondorcetVoting.new();
       await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });

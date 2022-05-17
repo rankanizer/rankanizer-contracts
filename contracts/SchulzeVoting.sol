@@ -2,36 +2,12 @@
 
 pragma solidity ^0.8.3;
 
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "./utils/QuickSort.sol";
 import "./CondorcetVoting.sol";
 
-/*
- * n - The number of candidates in the election.
- *
- * A value of five means there could be 5 candidates, e.g.
- * ["A", "B", "C", "D", "E"]
- *
- * ballots - A list of ballots that rank candidates
- *
- *    Ex. [
- *      [1, 2, 2, 3, 3], // This ballot prefers A, otherwise prefers B or C, and prefers D or E least.
- *      [2, 2, 2, 1, 2], // This ballot prefers D and is otherwise indifferent
- *    ]
- *
- * Returns a ranked list of candidates.
- *
- *    Ex.
- *    [
- *      { place: 1, indexes: [1, 3] },
- *      { place: 3, indexes: [2, 4] },
- *      { place: 5, indexes: [0] }
- *    ]
- *
- *    In this example B and C win, C and E tie for third, and A comes in last.
- */
-
- /**
- * @dev Schulze Voting System. 
+/**
+ * @dev Schulze Voting System.
  *      If there is no Condorce winner, it calculates a Schulze Winner by weighing other paths
  *      between each pair of candidates.
  */
@@ -46,14 +22,6 @@ contract SchulzeVoting is CondorcetVoting {
         __Ownable_init_unchained();
         __Ballot_init_unchained(candidates, newDuration);
         __CondorcetVoting_init_unchained(candidates);
-    }
-
-    function _max(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a >= b ? a : b;
-    }
-
-    function _min(uint256 a, uint256 b) internal pure returns (uint256) {
-        return a <= b ? a : b;
     }
 
     /**
@@ -98,7 +66,7 @@ contract SchulzeVoting is CondorcetVoting {
                 if (i != j) {
                     for (uint256 k = 0; k < n; k++) {
                         if (i != k && j != k) {
-                            path[j][k] = _max(path[j][k], _min(path[j][i], path[i][k]));
+                            path[j][k] = MathUpgradeable.max(path[j][k], MathUpgradeable.min(path[j][i], path[i][k]));
                         }
                     }
                 }

@@ -7,8 +7,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./Ballot.sol";
 
 /**
- * @dev Condorcet Voting System. 
- *      Elects the candidate who wins a majority of the vote in 
+ * @dev Condorcet Voting System.
+ *      Elects the candidate who wins a majority of the vote in
  *      every head-to-head election against each of the other candidates.
  */
 contract CondorcetVoting is Ballot {
@@ -66,7 +66,7 @@ contract CondorcetVoting is Ballot {
      *
      * Requirements:
      *
-     * - `userRanking` must have for every position, the preference of a user. 
+     * - `userRanking` must have for every position, the preference of a user.
      *    For instance, if a user ranking order is DBCA, the userRanking should be [3, 1, 2, 0]
      *    if there's no preference between candidates you may repeat preferences: [2, 1, 2, 0]
      * - Every candidate in `userRanking` should exist.

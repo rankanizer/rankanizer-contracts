@@ -6,7 +6,6 @@ pragma solidity ^0.8.3;
  * @dev Interface for the voting systems
  */
 interface Votable {
-
     struct Voter {
         bool voted;
         uint256[] vote;

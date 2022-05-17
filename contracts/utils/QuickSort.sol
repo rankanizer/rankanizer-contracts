@@ -2,12 +2,10 @@
 
 pragma solidity ^0.8.3;
 
-
 /**
  * @dev A quicksort implementation that uses only memory
  */
 library QuickSort {
-
     /**
      * @dev Sort `ref` array using content from `data` array
      *
