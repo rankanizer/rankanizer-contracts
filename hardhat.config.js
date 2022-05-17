@@ -61,6 +61,9 @@ module.exports = {
     hardhat: {
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: !withOptimizations,
+      accounts: {
+        count: 51,
+      },
     },
   },
   gasReporter: {
