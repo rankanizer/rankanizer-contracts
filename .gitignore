@@ -29,3 +29,4 @@ tsconfig*buildinfo
 yarn-debug.log*
 yarn-error.log*
 packages/contracts/artifacts/
+packages/contracts/cache/
