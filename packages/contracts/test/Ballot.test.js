@@ -24,6 +24,8 @@ contract('Ballot', function (accounts) {
 
       const ballot4 = await Ballot.new();
       await ballot4.initialize(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      const candidates = await ballot4.candidatesList();
+      assert.equal(candidates.length, 3);
       const expire = (new BN(5)).add(await time.latestBlock());
       expect(await ballot4.expire()).to.be.bignumber.equal(new BN(expire));
     });
