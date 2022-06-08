@@ -99,6 +99,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
             }
         }
         voter.vote = [candidateIndex];
+        EnumerableVotersMap.set(_voters, msg.sender, voter);
     }
 
     /**
@@ -185,10 +186,25 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * Requirements:
      *
      * - `voter` must have voted
-     *
+     * - `voter` must exist
      */
     function voteOf(address voter) external view override returns (uint256[] memory) {
-        
+        require(EnumerableVotersMap.contains(_voters, voter), "Voter must exist.");
+        require(EnumerableVotersMap.get(_voters, voter).voted, "Voter did not vote.");
+        return EnumerableVotersMap.get(_voters, voter).vote;
+    }
+
+    /**
+     * @dev Returns if `voter` has voted
+     *
+     * Requirements:
+     *
+     * - `voter` must exist
+     *
+     */
+    function didVote(address voter) external view override returns (bool) {
+        require(EnumerableVotersMap.contains(_voters, voter), "Voter must exist.");
+        return EnumerableVotersMap.get(_voters, voter).voted;
     }
 
     /**

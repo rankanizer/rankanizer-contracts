@@ -11,6 +11,7 @@ import Ballot from '@rankanizer-contracts/contracts/build/contracts/Ballot.json'
 
 function App() {
   const [account, setAccount] = useState();
+  const [open, setOpen] = useState();
   const [ballot, setBallot] = useState();
   const [expire, setExpire] = useState();
   const [candidates, setCandidates] = useState();
@@ -32,6 +33,9 @@ function App() {
         let expire = await ballot.methods.expire().call()
         setExpire(expire)
 
+        let open = await ballot.methods.finished().call()
+        setOpen(!open)
+
         let candidates = await ballot.methods.votes().call()
         setCandidates(candidates.length)
       } else {
@@ -50,6 +54,7 @@ function App() {
               ballot = { ballot }
               expire = { expire }
               account = { account }
+              open = { open }
               candidates = { candidates } />
       </div>
    );
