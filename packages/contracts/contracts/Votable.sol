@@ -28,6 +28,8 @@ interface Votable {
 
     function voteOf(address voter) external view returns (uint256[] memory);
 
+    function didVote(address voter) external view returns (bool);
+
     function votes() external view returns (uint256[] memory);
 
     function winners() external view returns (Group[] memory);

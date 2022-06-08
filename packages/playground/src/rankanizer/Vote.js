@@ -13,11 +13,9 @@ class Vote extends Component {
               }
           >
               <div style={{boardspacing: '0 1em'}}>
-                  <label className='float-left' style={{marginLeft: '15px'}}><b>Candidate:</b></label>
-                  <div className='input-group mb-3'>
-                      <input ref={(input)=> {this.duration = input}} type='text' placeholder={'From 1 to ' + this.props.candidates} required/>
-                  </div>
-                  <button type='submit' className='btn btn-primary'>Create</button>
+                  <label className='float-left' style={{marginLeft: '15px'}}><b>Candidate:</b></label>&nbsp;&nbsp;
+                  <input ref={(input)=> {this.duration = input}} type='text' placeholder={'From 1 to ' + this.props.candidates} required/>&nbsp;&nbsp;
+                  <button type='submit' className='btn btn-primary'>Vote</button>
               </div>
           </form>
       </div>

@@ -82,6 +82,17 @@ contract('Ballot', function (accounts) {
       assert.equal(receipt.receipt.logs[0].args.winners.length, 0);
     });
 
+    it('votes and voted', async function () {
+      ballot = await Ballot.new();
+      await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });
+
+      await ballot.vote([0], { from: accountA });
+      const votes = await ballot.voteOf(accountA);
+      assert.equal(votes[0], '0');
+      expect(await ballot.didVote(accountA)).to.be.true;
+      await expectRevert(ballot.didVote(accountB), 'Voter must exist.');
+    });
+
     it('vote after closed', async function () {
       ballot = await Ballot.new();
       await ballot.initialize(['Cthulhu', 'Nyar', 'Shubb'], 6, { from: owner });

@@ -16,6 +16,7 @@ class MainPage extends Component {
                               ballot={this.props.ballot}
                               expire={this.props.expire}
                               candidates={this.props.candidates}
+                              open={this.props.open}
                               />}></Route>
         <Route exact path='/create' element={<Poll
                               ballot={this.props.ballot}
