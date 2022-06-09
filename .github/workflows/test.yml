@@ -25,12 +25,12 @@ jobs:
           restore-keys: npm-v2-
       - run: npm ci
         if: steps.cache.outputs.cache-hit != 'true'
-      - run: npm run lint
-      - run: npm run test
+      - run: npm run lint --workspace @rankanizer-contracts/contracts
+      - run: npm run test --workspace @rankanizer-contracts/contracts
         env:
           FORCE_COLOR: 1
           ENABLE_GAS_REPORT: true
-      - run: npm run test:inheritance
+      - run: npm run test:inheritance --workspace @rankanizer-contracts/contracts
       - name: Print gas report
         run: cat gas-report.txt
 
@@ -51,7 +51,7 @@ jobs:
           restore-keys: npm-v2-
       - run: npm ci
         if: steps.cache.outputs.cache-hit != 'true'
-      - run: npm run coverage
+      - run: npm run coverage --workspace @rankanizer-contracts/contracts
         env:
           NODE_OPTIONS: --max_old_space_size=4096
       - uses: codecov/codecov-action@v2
