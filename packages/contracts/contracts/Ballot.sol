@@ -199,8 +199,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      *
      */
     function didVote(address voter) external view override returns (bool) {
-        if (!EnumerableVotersMap.contains(_voters, voter))
-            return false;
+        if (!EnumerableVotersMap.contains(_voters, voter)) return false;
         return EnumerableVotersMap.get(_voters, voter).voted;
     }
 

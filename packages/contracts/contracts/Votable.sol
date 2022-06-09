@@ -23,7 +23,7 @@ interface Votable {
     function vote(uint256[] memory ranking) external;
 
     function candidatesList() external view returns (string[] memory);
-    
+
     function votesOf(uint256 candidateIndex) external view returns (uint256);
 
     function voteOf(address voter) external view returns (uint256[] memory);
