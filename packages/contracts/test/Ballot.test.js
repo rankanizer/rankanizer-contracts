@@ -89,8 +89,10 @@ contract('Ballot', function (accounts) {
       await ballot.vote([0], { from: accountA });
       const votes = await ballot.voteOf(accountA);
       assert.equal(votes[0], '0');
-      expect(await ballot.didVote(accountA)).to.be.true();
-      expect(await ballot.didVote(accountB)).to.be.false();
+      // eslint-disable-next-line no-unused-expressions
+      expect(await ballot.didVote(accountA)).to.be.true;
+      // eslint-disable-next-line no-unused-expressions
+      expect(await ballot.didVote(accountB)).to.be.false;
     });
 
     it('vote after closed', async function () {
