@@ -1,9 +1,16 @@
-import React from 'react';
+import React, {Component} from 'react'
 
-const Results = () => (
-    <div className='home'>
-      <h2>Results</h2>
-    </div>
-  );
+class Results extends Component {
+
+
+  render() {
+    return (
+      <div className='home'>
+        <h2>Results</h2>
+        { this.props.votes }
+      </div>
+    );
+  }
+}
 
 export default Results;

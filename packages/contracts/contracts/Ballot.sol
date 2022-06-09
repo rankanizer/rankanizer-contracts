@@ -197,13 +197,10 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     /**
      * @dev Returns if `voter` has voted
      *
-     * Requirements:
-     *
-     * - `voter` must exist
-     *
      */
     function didVote(address voter) external view override returns (bool) {
-        require(EnumerableVotersMap.contains(_voters, voter), "Voter must exist.");
+        if (!EnumerableVotersMap.contains(_voters, voter))
+            return false;
         return EnumerableVotersMap.get(_voters, voter).voted;
     }
 

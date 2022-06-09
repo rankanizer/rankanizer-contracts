@@ -90,7 +90,7 @@ contract('Ballot', function (accounts) {
       const votes = await ballot.voteOf(accountA);
       assert.equal(votes[0], '0');
       expect(await ballot.didVote(accountA)).to.be.true;
-      await expectRevert(ballot.didVote(accountB), 'Voter must exist.');
+      expect(await ballot.didVote(accountB)).to.be.false;
     });
 
     it('vote after closed', async function () {

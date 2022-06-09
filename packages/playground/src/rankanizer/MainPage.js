@@ -24,8 +24,14 @@ class MainPage extends Component {
                               />}></Route>
         <Route exact path='/vote' element={<Vote
                               candidates={this.props.candidates}
+                              ballot={this.props.ballot}
+                              candidate = { this.props.candidate }
+                              account={this.props.account}
+                              voted = { this.props.voted }
                               />}></Route>
-        <Route exact path='/results' element={<Results/>}></Route>
+        <Route exact path='/results' element={<Results
+                              votes = { this.props.votes }
+                              />}></Route>
       </Routes>
     )
   }
