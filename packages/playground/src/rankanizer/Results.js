@@ -1,9 +1,7 @@
-import React, {Component} from 'react'
+import React, { Component } from 'react';
 
 class Results extends Component {
-
-
-  render() {
+  render () {
     return (
       <div className='home'>
         <h2>Results</h2>

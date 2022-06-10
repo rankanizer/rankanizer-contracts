@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import { NavLink as BaseNavLink } from 'react-router-dom';
 
 const NavLink = React.forwardRef(
@@ -13,7 +13,7 @@ const NavLink = React.forwardRef(
             isActive ? activeClassName : null,
           ]
             .filter(Boolean)
-            .join(" ")
+            .join(' ')
         }
         style={({ isActive }) => ({
           ...props.style,
@@ -21,27 +21,26 @@ const NavLink = React.forwardRef(
         })}
       />
     );
-  }
+  },
 );
 
 class Navigation extends Component {
-
-  render() {
-    let content
-    this.props.owner === this.props.account ? 
-        content = <li><NavLink activeClassName='current' to='/create'>Create Poll</NavLink></li> :
-        content = ""
+  render () {
+    let content;
+    this.props.owner === this.props.account
+      ? content = <li><NavLink activeClassName='current' to='/create'>Create Poll</NavLink></li>
+      : content = '';
     return (
-    <nav>
-      <ul>
-        <li><NavLink activeClassName='current' to='/'>My Polls</NavLink></li>
-        { content }
-        <li><NavLink activeClassName='current' to='/vote'>Vote</NavLink></li>
-        <li><NavLink activeClassName='current' to='/results'>Results</NavLink></li>
-      </ul>
-    </nav>
-    )
+      <nav>
+        <ul>
+          <li><NavLink activeClassName='current' to='/'>My Polls</NavLink></li>
+          { content }
+          <li><NavLink activeClassName='current' to='/vote'>Vote</NavLink></li>
+          <li><NavLink activeClassName='current' to='/results'>Results</NavLink></li>
+        </ul>
+      </nav>
+    );
   }
 }
 
-  export default Navigation;
+export default Navigation;
