@@ -99,6 +99,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
             }
         }
         voter.vote = [candidateIndex];
+        EnumerableVotersMap.set(_voters, msg.sender, voter);
     }
 
     /**
@@ -160,6 +161,13 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     }
 
     /**
+     * @dev Returns all candidates
+     */
+    function candidatesList() external view override returns (string[] memory) {
+        return _candidates;
+    }
+
+    /**
      * @dev Returns the votes of `candidateIndex`
      *
      * Requirements:
@@ -170,6 +178,29 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     function votesOf(uint256 candidateIndex) external view override returns (uint256) {
         require(candidateIndex < _candidates.length, "Candidate doesn't exist.");
         return _votes[candidateIndex];
+    }
+
+    /**
+     * @dev Returns the vote of `voter`
+     *
+     * Requirements:
+     *
+     * - `voter` must have voted
+     * - `voter` must exist
+     */
+    function voteOf(address voter) external view override returns (uint256[] memory) {
+        require(EnumerableVotersMap.contains(_voters, voter), "Voter must exist.");
+        require(EnumerableVotersMap.get(_voters, voter).voted, "Voter did not vote.");
+        return EnumerableVotersMap.get(_voters, voter).vote;
+    }
+
+    /**
+     * @dev Returns if `voter` has voted
+     *
+     */
+    function didVote(address voter) external view override returns (bool) {
+        if (!EnumerableVotersMap.contains(_voters, voter)) return false;
+        return EnumerableVotersMap.get(_voters, voter).voted;
     }
 
     /**
