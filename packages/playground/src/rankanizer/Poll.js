@@ -6,14 +6,6 @@ class Poll extends Component {
     this.candidates = 0;
   }
 
-  // setCandidate (i, newCandidate) {
-  //   let items = [...this.candidates];
-  //   let item = {...items[1]};
-  //   item.name = newCandidate;
-  //   items[i] = item;
-  //   this.candidates = items;
-  // }
-
   createPoll () {
     const candidatesList = [];
     const n = parseInt(this.candidates.value);
@@ -22,13 +14,9 @@ class Poll extends Component {
       candidatesList[i - 1] = i.toString();
     }
     console.log(this.props.ballot);
-    // this.setState({loading: true});
     this.props.ballot.methods
       .initialize(candidatesList, this.duration.value.toString())
       .send({ from: this.props.account });
-    // .on('transactionHash', (hash) => {
-    //     this.setState({loading: false});
-    // });
   }
 
   render () {
@@ -39,8 +27,7 @@ class Poll extends Component {
           onSubmit={(event) => {
             event.preventDefault();
             this.createPoll();
-          }
-          }
+          }}
         >
           <div style={{ boardspacing: '0 1em' }}>
             <label className='float-left' style={{ marginLeft: '15px' }}><b>Duration</b></label>

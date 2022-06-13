@@ -33,7 +33,6 @@ for (const artifact of artifacts) {
         .forEach(chain => {
           const comp = chain.indexOf(parseInt(x)) < chain.indexOf(parseInt(y)) ? '>' : '<';
           console.log(`- ${names[x]} ${comp} ${names[y]} in ${names[chain.find(Boolean)]}`);
-          // console.log(`- ${names[x]} ${comp} ${names[y]}: ${chain.reverse().map(id => names[id]).join(', ')}`);
         });
       process.exitCode = 1;
     }));

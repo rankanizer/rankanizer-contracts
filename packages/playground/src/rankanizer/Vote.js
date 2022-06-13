@@ -17,8 +17,7 @@ class Vote extends Component {
             this.props.ballot.methods
               .vote([selected - 1])
               .send({ from: this.props.account });
-          }
-          }
+          }}
         >
           <div style={{ boardspacing: '0 1em' }}>
             <label className='float-left' style={{ marginLeft: '15px' }}><b>Candidate:</b></label>&nbsp;&nbsp;

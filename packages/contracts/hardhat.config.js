@@ -1,8 +1,3 @@
-/// ENVVAR
-// - ENABLE_GAS_REPORT
-// - CI
-// - COMPILE_MODE
-
 const fs = require('fs');
 const path = require('path');
 const argv = require('yargs/yargs')()
