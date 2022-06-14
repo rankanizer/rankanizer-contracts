@@ -14,33 +14,41 @@ import "./Ballot.sol";
 contract CondorcetVoting is Ballot {
     using AddressUpgradeable for address;
     using EnumerableVotersMap for EnumerableVotersMap.Map;
+    using EnumerableGroupsMap for EnumerableGroupsMap.Map;
     using EnumerableVotersMap for EnumerableVotersMap.Voter;
+    using EnumerableGroupsMap for EnumerableGroupsMap.Group;
 
     // Possible optimization: main diagonal is not used
     uint256[][] internal _rank;
 
-    function initialize(string[] memory candidates, uint256 newDuration) external virtual override initializer {
-        __CondorcetVoting_init(candidates, newDuration);
+    function initialize() external virtual override initializer {
+        __CondorcetVoting_init();
     }
 
     // solhint-disable-next-line func-name-mixedcase
-    function __CondorcetVoting_init(string[] memory candidates, uint256 newDuration) internal {
+    function __CondorcetVoting_init() internal {
         __Context_init_unchained();
         __Ownable_init_unchained();
-        __Ballot_init_unchained(candidates, newDuration);
-        __CondorcetVoting_init_unchained(candidates);
+        __Ballot_init_unchained();
+        __CondorcetVoting_init_unchained();
     }
 
     // solhint-disable-next-line func-name-mixedcase
-    function __CondorcetVoting_init_unchained(string[] memory candidates) internal {
+    function __CondorcetVoting_init_unchained() internal {}
+
+    function createPoll(string[] memory candidates, uint256 newDuration) public override returns (uint256) {
         require(candidates.length > 1, "The list of candidates should have at least two elements");
 
-        uint256 n = _candidates.length;
+        uint256 pollId = super.createPoll(candidates, newDuration);
+
+        uint256 n = _polls[pollId]._candidates.length;
 
         _rank = new uint256[][](n);
         for (uint256 i = 0; i < n; i++) {
             _rank[i] = new uint256[](n);
         }
+
+        return pollId;
     }
 
     /**
@@ -72,13 +80,13 @@ contract CondorcetVoting is Ballot {
      * - Every candidate in `userRanking` should exist.
      * - `userRanking` must have the same size as `_candidates`
      */
-    function vote(uint256[] memory userRanking) public override didNotExpire {
-        require(userRanking.length == _candidates.length, "Voting must be casted for all candidates.");
+    function vote(uint256 pollId, uint256[] memory userRanking) public override didNotExpire(pollId) {
+        require(userRanking.length == _polls[pollId]._candidates.length, "Voting must be casted for all candidates.");
         for (uint256 i = 0; i < userRanking.length; i++) {
-            require(userRanking[i] < _candidates.length, "Candidate doesn't exist.");
+            require(userRanking[i] < _polls[pollId]._candidates.length, "Candidate doesn't exist.");
         }
 
-        EnumerableVotersMap.Voter storage ranker = _voters.getUnchecked(msg.sender);
+        EnumerableVotersMap.Voter storage ranker = _voters[pollId].getUnchecked(msg.sender);
 
         if (ranker.voted) {
             _updateVotes(ranker.vote, false);
@@ -93,11 +101,11 @@ contract CondorcetVoting is Ballot {
     /**
      * @dev Calculates `_winners` and returns true if there is only one winner, false otherwise.
      */
-    function _calculateWinners() internal virtual override returns (bool) {
-        Group memory group;
+    function _calculateWinners(uint256 pollId) internal virtual override returns (bool) {
+        bool hasWinners = false;
 
         // Temporary memory array to avoid the use of a storage variable
-        uint256[] memory temp = new uint256[](_candidates.length);
+        uint256[] memory temp = new uint256[](_polls[pollId]._candidates.length);
         uint256 size = 0;
 
         for (uint256 i = 0; i < _rank.length; i++) {
@@ -115,16 +123,18 @@ contract CondorcetVoting is Ballot {
             }
         }
 
-        if (size > 0) {
-            group.place = 1;
-            group.candidates = new uint256[](size);
-            for (uint256 i = 0; i < size; i++) {
-                group.candidates[i] = temp[i];
-            }
-            _winners.push(group);
-        }
+        // if (size > 0) {
+        //     EnumerableGroupsMap.Group storage group = _winners[pollId].getUnchecked(msg.sender);
+        //     group.place = 1;
+        //     group.candidates = new uint256[](size);
+        //     for (uint256 i = 0; i < size; i++) {
+        //         group.candidates[i] = temp[i];
+        //     }
+        //     hasWinners = true;
+        //     EnumerableGroupsMap.set(_winners[pollId], msg.sender, group);
+        // }
 
-        return (_winners.length > 0);
+        return (hasWinners);
     }
 
     uint256[49] private __gap;

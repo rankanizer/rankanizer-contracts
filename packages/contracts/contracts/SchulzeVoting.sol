@@ -12,24 +12,29 @@ import "./CondorcetVoting.sol";
  *      between each pair of candidates.
  */
 contract SchulzeVoting is CondorcetVoting {
-    function initialize(string[] memory candidates, uint256 newDuration) external override initializer {
-        __SchulzeVoting_init(candidates, newDuration);
+    using EnumerableVotersMap for EnumerableVotersMap.Map;
+    using EnumerableGroupsMap for EnumerableGroupsMap.Map;
+    using EnumerableVotersMap for EnumerableVotersMap.Voter;
+    using EnumerableGroupsMap for EnumerableGroupsMap.Group;
+
+    function initialize() external override initializer {
+        __SchulzeVoting_init();
     }
 
     // solhint-disable-next-line func-name-mixedcase
-    function __SchulzeVoting_init(string[] memory candidates, uint256 newDuration) internal {
+    function __SchulzeVoting_init() internal {
         __Context_init_unchained();
         __Ownable_init_unchained();
-        __Ballot_init_unchained(candidates, newDuration);
-        __CondorcetVoting_init_unchained(candidates);
+        __Ballot_init_unchained();
+        __CondorcetVoting_init_unchained();
     }
 
     /**
      * @dev It tries to find a Condorcet winner. If there isn't one, calculate Schulze winner(s)
      */
-    function _calculateWinners() internal virtual override returns (bool) {
-        if (!super._calculateWinners()) {
-            return _runSchulzeVoting();
+    function _calculateWinners(uint256 pollId) internal virtual override returns (bool) {
+        if (!super._calculateWinners(pollId)) {
+            return _runSchulzeVoting(pollId);
         } else {
             return true;
         }
@@ -38,7 +43,7 @@ contract SchulzeVoting is CondorcetVoting {
     /**
      * @dev Calculats Schulze winner(s) returning a ranked list: { place: 1, indexes: [1, 3] }
      */
-    function _runSchulzeVoting() internal returns (bool) {
+    function _runSchulzeVoting(uint256 pollId) internal returns (bool) {
         uint256 n = _rank.length;
 
         // Paths Matrix
@@ -83,7 +88,7 @@ contract SchulzeVoting is CondorcetVoting {
             }
         }
 
-        ranksToGroups(wins);
+        ranksToGroups(pollId, wins);
 
         return true;
     }
@@ -98,38 +103,39 @@ contract SchulzeVoting is CondorcetVoting {
      *  ]
      */
     function ranksToGroups(
+        uint256 pollId,
         uint256[] memory ranks /** pure */
     ) public returns (Group[] memory) {
         uint256 n = ranks.length;
         uint256[] memory byRank = new uint256[](n);
 
-        Group memory group;
+        // EnumerableGroupsMap.Group storage group = _winners[pollId].getUnchecked(msg.sender);
 
-        // Temporary memory array to avoid the use of a storage variable
-        uint256[] memory temp = new uint256[](_candidates.length);
-        uint256 size = 0;
+        // // Temporary memory array to avoid the use of a storage variable
+        // uint256[] memory temp = new uint256[](_polls[pollId]._candidates.length);
+        // uint256 size = 0;
 
-        QuickSort.sortRef(ranks, byRank);
+        // QuickSort.sortRef(ranks, byRank);
 
-        uint256 place = 1;
-        group.place = place;
-        temp[size++] = byRank[0];
+        // uint256 place = 1;
+        // group.place = place;
+        // temp[size++] = byRank[0];
 
-        for (uint256 i = 1; i < byRank.length; i++) {
-            place++;
-            if (ranks[byRank[i]] != ranks[byRank[i - 1]]) {
-                break;
-            } else {
-                temp[size++] = byRank[i];
-            }
-        }
+        // for (uint256 i = 1; i < byRank.length; i++) {
+        //     place++;
+        //     if (ranks[byRank[i]] != ranks[byRank[i - 1]]) {
+        //         break;
+        //     } else {
+        //         temp[size++] = byRank[i];
+        //     }
+        // }
 
-        group.candidates = new uint256[](size);
-        for (uint256 i = 0; i < size; i++) {
-            group.candidates[i] = temp[i];
-        }
-        _winners.push(group);
-        return _winners;
+        // group.candidates = new uint256[](size);
+        // for (uint256 i = 0; i < size; i++) {
+        //     group.candidates[i] = temp[i];
+        // }
+        // EnumerableGroupsMap.set(_winners[pollId], msg.sender, group);
+        // return _polls[pollId]._winners;
     }
 
     uint256[50] private __gap;
