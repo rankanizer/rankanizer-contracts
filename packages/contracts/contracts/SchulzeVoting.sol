@@ -13,9 +13,7 @@ import "./CondorcetVoting.sol";
  */
 contract SchulzeVoting is CondorcetVoting {
     using EnumerableVotersMap for EnumerableVotersMap.Map;
-    using EnumerableGroupsMap for EnumerableGroupsMap.Map;
     using EnumerableVotersMap for EnumerableVotersMap.Voter;
-    using EnumerableGroupsMap for EnumerableGroupsMap.Group;
 
     function initialize() external override initializer {
         __SchulzeVoting_init();
@@ -137,9 +135,9 @@ contract SchulzeVoting is CondorcetVoting {
         // EnumerableGroupsMap.set(_winners[pollId], msg.sender, group);
 
         for (uint256 i = 0; i < size; i++) {
-                _winners[pollId].push(temp[i]);
+            _winners[pollId].push(temp[i]);
         }
-        
+
         return _winners[pollId];
     }
 

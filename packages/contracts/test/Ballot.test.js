@@ -35,6 +35,62 @@ contract('Ballot', function (accounts) {
       expect(await ballot4.expire(1)).to.be.bignumber.equal(new BN(expire));
     });
 
+    // Creator Only Tests
+    it('creator only methods', async function () {
+      ballot = await Ballot.new();
+      await ballot.initialize({ from: owner });
+      await ballot.createPoll(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      await expectRevert(
+        ballot.votes(id, { from: accountA }), 'This method should be called only by the poll\'s creator.');
+      await expectRevert(
+        ballot.votesOf(id, 0, { from: accountA }), 'This method should be called only by the poll\'s creator.');
+      await expectRevert(
+        ballot.closePoll(id, { from: accountA }), 'This method should be called only by the poll\'s creator.');
+      await expectRevert(
+        ballot.addVoter(id, accountB, { from: accountA }), 'This method should be called only by the poll\'s creator.');
+    });
+
+    // Creator or voter tests
+    it('creator or voter methods', async function () {
+      ballot = await Ballot.new();
+      await ballot.initialize({ from: owner });
+      await ballot.createPoll(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      await ballot.vote(id, [1], { from: accountA });
+      ballot.voteOf(id, accountA, { from: accountA });
+      ballot.voteOf(id, accountA, { from: owner });
+      await expectRevert(
+        ballot.voteOf(id, accountA, { from: accountB }), 'Only the creator or the voter may call this method.');
+    });
+
+    // Poll must exist tests
+    it('poll must exist', async function () {
+      const noId = 1;
+      ballot = await Ballot.new();
+      await ballot.initialize({ from: owner });
+      await ballot.createPoll(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      await expectRevert(ballot.vote(noId, [1]), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(ballot.closePoll(noId), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(ballot.candidatesList(noId), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(ballot.votesOf(noId, 0), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(ballot.voteOf(noId, accountA), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(ballot.didVote(noId, accountA), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(ballot.votes(noId), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(ballot.winners(noId), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(ballot.expire(noId), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(ballot.finished(noId), 'Invalid poll id. This poll doesn\'t exist.');
+      await expectRevert(
+        ballot.addVoter(noId, accountA, { from: owner }), 'Invalid poll id. This poll doesn\'t exist.');
+    });
+
+    // Owner only tests
+    it('owner only methods', async function () {
+      ballot = await Ballot.new();
+      await ballot.initialize({ from: owner });
+      await ballot.createPoll(['Cthulhu', 'Nyar', 'Shubb'], 5);
+      await ballot.polls({ from: owner });
+      await expectRevert(ballot.polls({ from: accountA }), 'Only the contract owner may call this method.');
+    });
+
     // Vote Tests
     it('vote', async function () {
       ballot = await Ballot.new();
@@ -58,6 +114,21 @@ contract('Ballot', function (accounts) {
       await ballot.initialize({ from: owner });
       await ballot.createPoll(['Cthulhu', 'Nyar', 'Shubb'], 5);
       await expectRevert(ballot.vote(id, [100], { from: accountA }), 'Candidate doesn\'t exist.');
+    });
+
+    it('vote of nonexistent voter', async function () {
+      ballot = await Ballot.new();
+      await ballot.initialize({ from: owner });
+      await ballot.createPoll(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      await expectRevert(ballot.voteOf(id, accountA, { from: owner }), 'Voter must exist.');
+    });
+
+    it('get vote from user that didn\'t vote', async function () {
+      ballot = await Ballot.new();
+      await ballot.initialize({ from: owner });
+      await ballot.createPoll(['Cthulhu', 'Nyar', 'Shubb'], 5, { from: owner });
+      await ballot.addVoter(id, accountA, { from: owner });
+      await expectRevert(ballot.voteOf(id, accountA, { from: owner }), 'Voter did not vote.');
     });
 
     it('vote again', async function () {

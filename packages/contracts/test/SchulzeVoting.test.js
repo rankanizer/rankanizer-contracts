@@ -25,7 +25,7 @@ contract('SchulzeVoting', function (accounts) {
 
   describe('the schulze method', () => {
     let schulze;
-    let id = 0;
+    const id = 0;
 
     describe('Electowiki examples', () => {
       it('Several draws, two winners', async function () {

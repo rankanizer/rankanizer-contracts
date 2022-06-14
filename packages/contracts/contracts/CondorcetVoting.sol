@@ -14,9 +14,7 @@ import "./Ballot.sol";
 contract CondorcetVoting is Ballot {
     using AddressUpgradeable for address;
     using EnumerableVotersMap for EnumerableVotersMap.Map;
-    using EnumerableGroupsMap for EnumerableGroupsMap.Map;
     using EnumerableVotersMap for EnumerableVotersMap.Voter;
-    using EnumerableGroupsMap for EnumerableGroupsMap.Group;
 
     // Possible optimization: main diagonal is not used
     uint256[][] internal _rank;

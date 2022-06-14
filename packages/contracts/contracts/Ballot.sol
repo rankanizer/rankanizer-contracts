@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "./utils/EnumerableVotersMap.sol";
-import "./utils/EnumerableGroupsMap.sol";
 import "./utils/QuickSort.sol";
 import "./Votable.sol";
 
@@ -16,9 +15,7 @@ import "./Votable.sol";
 contract Ballot is Votable, Initializable, OwnableUpgradeable {
     using AddressUpgradeable for address;
     using EnumerableVotersMap for EnumerableVotersMap.Map;
-    using EnumerableGroupsMap for EnumerableGroupsMap.Map;
     using EnumerableVotersMap for EnumerableVotersMap.Voter;
-    using EnumerableGroupsMap for EnumerableGroupsMap.Group;
 
     struct Poll {
         uint256 _pollId;
@@ -28,13 +25,13 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         uint256 _expire;
         // Poll closed
         bool _finished;
-        // Polll Creator's address
+        // Poll Creator's address
         address creator;
     }
 
     mapping(uint256 => EnumerableVotersMap.Map) _voters;
     //mapping(uint256 => EnumerableGroupsMap.Map) _winners;
-    uint256[][10] _winners;
+    uint256[][10] internal _winners;
 
     Poll[] internal _polls;
 
@@ -115,7 +112,13 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * - the voted candidate must exist.
      *
      */
-    function vote(uint256 pollId, uint256[] memory ranking) external virtual override didNotExpire(pollId) {
+    function vote(uint256 pollId, uint256[] memory ranking)
+        external
+        virtual
+        override
+        pollMustExist(pollId)
+        didNotExpire(pollId)
+    {
         require(ranking.length == 1, "Voting must be for only one candidate.");
         uint256 candidateIndex = ranking[0];
         require(candidateIndex < _polls[pollId]._candidates.length, "Candidate doesn't exist.");
@@ -162,12 +165,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * @dev Calculates `_winners` and returns true if succesful.
      *
      */
-    function _calculateWinners(uint256 pollId)
-        internal
-        virtual
-        pollMustExist(pollId)
-        returns (bool)
-    {
+    function _calculateWinners(uint256 pollId) internal virtual pollMustExist(pollId) returns (bool) {
         if (_numberOfVotes(pollId) == 0) return false;
 
         uint256[] memory ref = new uint256[](_polls[pollId]._votes.length);
@@ -258,11 +256,20 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     {
         require(
             msg.sender == _polls[pollId].creator || msg.sender == voter,
-            "Only the creator or the voter may call this method"
+            "Only the creator or the voter may call this method."
         );
         require(EnumerableVotersMap.contains(_voters[pollId], voter), "Voter must exist.");
         require(EnumerableVotersMap.get(_voters[pollId], voter).voted, "Voter did not vote.");
         return EnumerableVotersMap.get(_voters[pollId], voter).vote;
+    }
+
+    /**
+     * @dev add a `voter` to the list of `_voters`
+     *
+     */
+    function addVoter(uint256 pollId, address voterAddress) external pollMustExist(pollId) pollCreatorOnly(pollId) {
+        EnumerableVotersMap.Voter storage voter = _voters[pollId].getUnchecked(voterAddress);
+        EnumerableVotersMap.set(_voters[pollId], voterAddress, voter);
     }
 
     /**
@@ -320,6 +327,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * @dev Returns polls
      */
     function polls() external view returns (Poll[] memory) {
+        require(owner() == msg.sender, "Only the contract owner may call this method.");
         return _polls;
     }
 

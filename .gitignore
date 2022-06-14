@@ -28,3 +28,4 @@ yarn-lock.json
 tsconfig*buildinfo
 yarn-debug.log*
 yarn-error.log*
+coverage.json
