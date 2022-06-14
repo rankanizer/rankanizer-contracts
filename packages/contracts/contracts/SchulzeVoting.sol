@@ -105,37 +105,42 @@ contract SchulzeVoting is CondorcetVoting {
     function ranksToGroups(
         uint256 pollId,
         uint256[] memory ranks /** pure */
-    ) public returns (Group[] memory) {
+    ) public returns (uint256[] memory) {
         uint256 n = ranks.length;
         uint256[] memory byRank = new uint256[](n);
 
         // EnumerableGroupsMap.Group storage group = _winners[pollId].getUnchecked(msg.sender);
 
         // // Temporary memory array to avoid the use of a storage variable
-        // uint256[] memory temp = new uint256[](_polls[pollId]._candidates.length);
-        // uint256 size = 0;
+        uint256[] memory temp = new uint256[](_polls[pollId]._candidates.length);
+        uint256 size = 0;
 
-        // QuickSort.sortRef(ranks, byRank);
+        QuickSort.sortRef(ranks, byRank);
 
-        // uint256 place = 1;
+        uint256 place = 1;
         // group.place = place;
-        // temp[size++] = byRank[0];
+        temp[size++] = byRank[0];
 
-        // for (uint256 i = 1; i < byRank.length; i++) {
-        //     place++;
-        //     if (ranks[byRank[i]] != ranks[byRank[i - 1]]) {
-        //         break;
-        //     } else {
-        //         temp[size++] = byRank[i];
-        //     }
-        // }
+        for (uint256 i = 1; i < byRank.length; i++) {
+            place++;
+            if (ranks[byRank[i]] != ranks[byRank[i - 1]]) {
+                break;
+            } else {
+                temp[size++] = byRank[i];
+            }
+        }
 
         // group.candidates = new uint256[](size);
         // for (uint256 i = 0; i < size; i++) {
         //     group.candidates[i] = temp[i];
         // }
         // EnumerableGroupsMap.set(_winners[pollId], msg.sender, group);
-        // return _polls[pollId]._winners;
+
+        for (uint256 i = 0; i < size; i++) {
+                _winners[pollId].push(temp[i]);
+        }
+        
+        return _winners[pollId];
     }
 
     uint256[50] private __gap;

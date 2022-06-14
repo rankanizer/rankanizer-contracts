@@ -134,6 +134,12 @@ contract CondorcetVoting is Ballot {
         //     EnumerableGroupsMap.set(_winners[pollId], msg.sender, group);
         // }
 
+        if (size > 0) {
+            for (uint256 i = 0; i < size; i++) {
+                _winners[pollId].push(temp[i]);
+            }
+            hasWinners = true;
+        }
         return (hasWinners);
     }
 
