@@ -26,15 +26,11 @@ const NavLink = React.forwardRef(
 
 class Navigation extends Component {
   render () {
-    let content;
-    this.props.owner === this.props.account
-      ? content = <li><NavLink activeClassName='current' to='/create'>Create Poll</NavLink></li>
-      : content = '';
     return (
       <nav>
         <ul>
           <li><NavLink activeClassName='current' to='/'>My Polls</NavLink></li>
-          { content }
+          <li><NavLink activeClassName='current' to='/create'>Create Poll</NavLink></li>
           <li><NavLink activeClassName='current' to='/vote'>Vote</NavLink></li>
           <li><NavLink activeClassName='current' to='/results'>Results</NavLink></li>
         </ul>

@@ -107,8 +107,6 @@ contract SchulzeVoting is CondorcetVoting {
         uint256 n = ranks.length;
         uint256[] memory byRank = new uint256[](n);
 
-        // EnumerableGroupsMap.Group storage group = _winners[pollId].getUnchecked(msg.sender);
-
         // // Temporary memory array to avoid the use of a storage variable
         uint256[] memory temp = new uint256[](_polls[pollId]._candidates.length);
         uint256 size = 0;
@@ -116,7 +114,6 @@ contract SchulzeVoting is CondorcetVoting {
         QuickSort.sortRef(ranks, byRank);
 
         uint256 place = 1;
-        // group.place = place;
         temp[size++] = byRank[0];
 
         for (uint256 i = 1; i < byRank.length; i++) {
@@ -127,12 +124,6 @@ contract SchulzeVoting is CondorcetVoting {
                 temp[size++] = byRank[i];
             }
         }
-
-        // group.candidates = new uint256[](size);
-        // for (uint256 i = 0; i < size; i++) {
-        //     group.candidates[i] = temp[i];
-        // }
-        // EnumerableGroupsMap.set(_winners[pollId], msg.sender, group);
 
         for (uint256 i = 0; i < size; i++) {
             _winners[pollId].push(temp[i]);

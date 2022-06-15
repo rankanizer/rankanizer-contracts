@@ -18,8 +18,11 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     using EnumerableVotersMap for EnumerableVotersMap.Voter;
 
     struct Poll {
+        // Unique identifier for poll
         uint256 _pollId;
+        // List of candidates
         string[] _candidates;
+        // Votes for each candidate
         uint256[] _votes;
         // Expiration block
         uint256 _expire;
@@ -30,9 +33,11 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     }
 
     mapping(uint256 => EnumerableVotersMap.Map) _voters;
-    //mapping(uint256 => EnumerableGroupsMap.Map) _winners;
+
+    // TODO size of winners of a poll
     uint256[][10] internal _winners;
 
+    // Polls of the contract
     Poll[] internal _polls;
 
     function initialize() external virtual initializer {
@@ -49,6 +54,15 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     // solhint-disable-next-line func-name-mixedcase
     function __Ballot_init_unchained() internal {}
 
+    /**
+     * @dev Create a new poll and return it's unique id
+     *
+     * Requirements:
+     *
+     * - `candidates` length must be at least 2.
+     * - `newDuration` must be greater than zero.
+     *
+     */
     function createPoll(string[] memory candidates, uint256 newDuration) public virtual returns (uint256) {
         require(candidates.length > 1, "The list of candidates should have at least two elements");
         require(newDuration > 0, "The duration of the poll must be greater than zero");
@@ -182,16 +196,6 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
                 temp[size++] = ref[i];
             } else break;
         }
-
-        // Updates the _winners array
-        // EnumerableGroupsMap.Group storage group = _winners[pollId].getUnchecked(msg.sender);
-        // group.place = 1;
-        // group.candidates = new uint256[](size);
-        // for (uint256 i = 0; i < size; i++) {
-        //     group.candidates[i] = temp[i];
-        // }
-
-        // EnumerableGroupsMap.set(_winners[pollId], msg.sender, group);
 
         for (uint256 i = 0; i < size; i++) {
             _winners[pollId].push(temp[i]);
