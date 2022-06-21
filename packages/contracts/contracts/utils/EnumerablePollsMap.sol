@@ -27,18 +27,18 @@ library EnumerablePollsMap {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.Bytes32Set;
 
     struct Poll {
+        // Poll Owner's address
+        address owner;
         // List of candidates
         uint256 candidates;
-        // Votes for each candidate
-        uint256[] votes;
+        // Candidates uri
+        string uri;
         // Expiration block
         uint256 expire;
         // Poll closed
         bool finished;
-        // Poll Owner's address
-        address owner;
-        //Candidates uri
-        string uri;
+        // Votes for each candidate
+        uint256[] votes;
     }
 
     // Maps an Address to Voter
@@ -46,6 +46,20 @@ library EnumerablePollsMap {
         // Storage of keys
         EnumerableSetUpgradeable.Bytes32Set _keys;
         mapping(bytes32 => Poll) _values;
+    }
+
+    string private constant _POLL_TYPE = "Poll(uint256 candidates,string uri,address owner)";
+
+    /**
+     * @dev Return the poll's hash
+     *
+     * Requirements:
+     *
+     * - `poll`  poll to calculate the hash
+     *
+     */
+    function hash(EnumerablePollsMap.Poll memory poll) internal pure returns (bytes32) {
+        return keccak256(abi.encode(_POLL_TYPE, poll.candidates, keccak256(bytes(poll.uri)), poll.owner));
     }
 
     /**

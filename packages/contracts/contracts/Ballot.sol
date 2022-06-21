@@ -20,8 +20,6 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
-    string private constant _POLL_TYPE = "Poll(uint256 candidates,string uri,address owner)";
-
     mapping(bytes32 => EnumerableVotersMap.Map) _voters;
 
     // TODO Issue #6 - Refactoring the code
@@ -73,27 +71,16 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
             uri: uri
         });
 
-        bytes32 pollHash = calcPollHash(newPoll);
+        // EnumerablePollsMap.Poll memory poll = _polls.get(0x0);
+        bytes32 pollHash = newPoll.hash();
 
         _polls.set(pollHash, newPoll);
 
         _pollsByOwner[msg.sender].push(pollHash);
 
-        emit PollCreated(pollHash);
+        emit PollCreated(pollHash, msg.sender, uri);
 
         return pollHash;
-    }
-
-    /**
-     * @dev Return the poll's hash
-     *
-     * Requirements:
-     *
-     * - `poll`  poll to calculate the hash
-     *
-     */
-    function calcPollHash(EnumerablePollsMap.Poll memory poll) public pure returns (bytes32) {
-        return keccak256(abi.encode(_POLL_TYPE, poll.candidates, keccak256(abi.encode(poll.uri)), poll.owner));
     }
 
     /**
@@ -182,10 +169,11 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      *
      * Emits a {PollClosed} event.
      */
-    function _closePoll(bytes32 pollHash) internal pollMustExist(pollHash) {
-        require(!_polls.get(pollHash).finished, "This poll is closed already");
-        _polls.get(pollHash).finished = true;
-        _calculateWinners(pollHash);
+    function _closePoll(bytes32 pollHash) internal {
+        EnumerablePollsMap.Poll storage poll = _polls.get(pollHash);
+        require(!poll.finished, "This poll is closed already");
+        poll.finished = true;
+        _calculateWinners(pollHash, poll);
         emit PollClosed(pollHash, _winners[pollHash]);
     }
 
@@ -193,20 +181,20 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * @dev Calculates `_winners` and returns true if succesful.
      *
      */
-    function _calculateWinners(bytes32 pollHash) internal virtual pollMustExist(pollHash) returns (bool) {
+    function _calculateWinners(bytes32 pollHash, EnumerablePollsMap.Poll memory poll) internal virtual returns (bool) {
         if (_numberOfVotes(pollHash) == 0) return false;
 
-        uint256[] memory ref = new uint256[](_polls.get(pollHash).votes.length);
-        QuickSort.sortRef(_polls.get(pollHash).votes, ref);
+        uint256[] memory ref = new uint256[](poll.votes.length);
+        QuickSort.sortRef(poll.votes, ref);
 
-        uint256 winnerVotes = _polls.get(pollHash).votes[ref[0]];
+        uint256 winnerVotes = poll.votes[ref[0]];
 
         // Temporary memory array to avoid the use of a storage variable
-        uint256[] memory temp = new uint256[](_polls.get(pollHash).candidates);
+        uint256[] memory temp = new uint256[](poll.candidates);
         uint256 size = 0;
 
         for (uint256 i = 0; i < ref.length; i++) {
-            if (_polls.get(pollHash).votes[ref[i]] == winnerVotes) {
+            if (poll.votes[ref[i]] == winnerVotes) {
                 temp[size++] = ref[i];
             } else break;
         }

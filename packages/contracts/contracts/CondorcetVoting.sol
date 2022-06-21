@@ -103,11 +103,16 @@ contract CondorcetVoting is Ballot {
     /**
      * @dev Calculates `_winners` and returns true if there is only one winner, false otherwise.
      */
-    function _calculateWinners(bytes32 pollHash) internal virtual override returns (bool) {
+    function _calculateWinners(bytes32 pollHash, EnumerablePollsMap.Poll memory poll)
+        internal
+        virtual
+        override
+        returns (bool)
+    {
         bool hasWinners = false;
 
         // Temporary memory array to avoid the use of a storage variable
-        uint256[] memory temp = new uint256[](_polls.get(pollHash).candidates);
+        uint256[] memory temp = new uint256[](poll.candidates);
         uint256 size = 0;
 
         for (uint256 i = 0; i < _rank.length; i++) {

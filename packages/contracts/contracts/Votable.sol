@@ -18,7 +18,7 @@ interface Votable {
 
     event PollClosed(bytes32 pollHash, uint256[] winners);
 
-    event PollCreated(bytes32 pollHash);
+    event PollCreated(bytes32 indexed pollHash, address indexed owner, string uri);
 
     function closePoll(bytes32 pollHash) external;
 

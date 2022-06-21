@@ -32,8 +32,13 @@ contract SchulzeVoting is CondorcetVoting {
     /**
      * @dev It tries to find a Condorcet winner. If there isn't one, calculate Schulze winner(s)
      */
-    function _calculateWinners(bytes32 pollHash) internal virtual override returns (bool) {
-        if (!super._calculateWinners(pollHash)) {
+    function _calculateWinners(bytes32 pollHash, EnumerablePollsMap.Poll memory poll)
+        internal
+        virtual
+        override
+        returns (bool)
+    {
+        if (!super._calculateWinners(pollHash, poll)) {
             return _runSchulzeVoting(pollHash);
         } else {
             return true;
