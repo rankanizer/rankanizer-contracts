@@ -20,12 +20,14 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
-    string private constant _POLL_TYPE = "Poll(uint256 candidates,string uri)";
+    string private constant _POLL_TYPE = "Poll(uint256 candidates,string uri,address owner)";
 
     mapping(bytes32 => EnumerableVotersMap.Map) _voters;
 
     // TODO Issue #6 - Refactoring the code
     mapping(bytes32 => uint256[]) _winners;
+
+    mapping(address => bytes32[]) _pollsByOwner;
 
     // Polls of the contract
     EnumerablePollsMap.Map internal _polls;
@@ -67,13 +69,17 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
             votes: new uint256[](candidates),
             expire: block.number + newDuration,
             finished: false,
-            creator: msg.sender,
+            owner: msg.sender,
             uri: uri
         });
 
         bytes32 pollHash = calcPollHash(newPoll);
 
         _polls.set(pollHash, newPoll);
+
+        _pollsByOwner[msg.sender].push(pollHash);
+
+        emit PollCreated(pollHash);
 
         return pollHash;
     }
@@ -87,14 +93,14 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      *
      */
     function calcPollHash(EnumerablePollsMap.Poll memory poll) public pure returns (bytes32) {
-        return keccak256(abi.encode(_POLL_TYPE, poll.candidates, keccak256(abi.encode(poll.uri))));
+        return keccak256(abi.encode(_POLL_TYPE, poll.candidates, keccak256(abi.encode(poll.uri)), poll.owner));
     }
 
     /**
      * @dev checks if it's the creator of the poll.
      */
-    modifier pollCreatorOnly(bytes32 pollHash) {
-        require(msg.sender == _polls.get(pollHash).creator, "This method should be called only by the poll's creator.");
+    modifier pollOwnerOnly(bytes32 pollHash) {
+        require(msg.sender == _polls.get(pollHash).owner, "This method should be called only by the poll's creator.");
         _;
     }
 
@@ -167,7 +173,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      *
      * Emits a {PollClosed} event.
      */
-    function closePoll(bytes32 pollHash) external virtual override pollMustExist(pollHash) pollCreatorOnly(pollHash) {
+    function closePoll(bytes32 pollHash) external virtual override pollMustExist(pollHash) pollOwnerOnly(pollHash) {
         _closePoll(pollHash);
     }
 
@@ -237,7 +243,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         view
         override
         pollMustExist(pollHash)
-        pollCreatorOnly(pollHash)
+        pollOwnerOnly(pollHash)
         returns (uint256)
     {
         require(candidateIndex < _polls.get(pollHash).candidates, "Candidate doesn't exist.");
@@ -260,7 +266,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         returns (uint256[] memory)
     {
         require(
-            msg.sender == _polls.get(pollHash).creator || msg.sender == voter,
+            msg.sender == _polls.get(pollHash).owner || msg.sender == voter,
             "Only the creator or the voter may call this method."
         );
         require(EnumerableVotersMap.contains(_voters[pollHash], voter), "Voter must exist.");
@@ -272,11 +278,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * @dev add a `voter` to the list of `_voters`
      *
      */
-    function addVoter(bytes32 pollHash, address voterAddress)
-        external
-        pollMustExist(pollHash)
-        pollCreatorOnly(pollHash)
-    {
+    function addVoter(bytes32 pollHash, address voterAddress) external pollMustExist(pollHash) pollOwnerOnly(pollHash) {
         EnumerableVotersMap.Voter storage voter = _voters[pollHash].getUnchecked(voterAddress);
         EnumerableVotersMap.set(_voters[pollHash], voterAddress, voter);
     }
@@ -298,7 +300,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         view
         override
         pollMustExist(pollHash)
-        pollCreatorOnly(pollHash)
+        pollOwnerOnly(pollHash)
         returns (uint256[] memory)
     {
         return _polls.get(pollHash).votes;
@@ -326,20 +328,46 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     }
 
     /**
-     * @dev Returns the hash of the last poll
-     */
-    function getLastPollHash() external view returns (bytes32) {
-        bytes32 key;
-        (key, ) = _polls.at(_polls.length() - 1);
-        return key;
-    }
-
-    /**
      * @dev Returns the status of the poll
      */
     function finished(bytes32 pollHash) external view override pollMustExist(pollHash) returns (bool) {
         return _polls.get(pollHash).finished;
     }
 
-    uint256[46] private __gap;
+    /**
+     * @dev Returns the poll count
+     */
+    function pollCount() public view returns (uint256) {
+        return _polls.length();
+    }
+
+    /**
+     * @dev Returns a poll by index
+     */
+    function pollByIndex(uint256 index) public view returns (bytes32, EnumerablePollsMap.Poll memory) {
+        return _polls.at(index);
+    }
+
+    /**
+     * @dev Returns a poll by hash
+     */
+    function pollByHash(bytes32 pollHash) public view returns (EnumerablePollsMap.Poll memory) {
+        return _polls.get(pollHash);
+    }
+
+    /**
+     * @dev Returns the poll count of a specific owner
+     */
+    function ownerPollCount(address owner) public view returns (uint256) {
+        return _pollsByOwner[owner].length;
+    }
+
+    /**
+     * @dev Returns a specific poll of a specific owner
+     */
+    function ownerPollByIndex(address owner, uint256 index) public view returns (bytes32) {
+        return _pollsByOwner[owner][index];
+    }
+
+    uint256[45] private __gap;
 }

@@ -35,8 +35,8 @@ library EnumerablePollsMap {
         uint256 expire;
         // Poll closed
         bool finished;
-        // Poll Creator's address
-        address creator;
+        // Poll Owner's address
+        address owner;
         //Candidates uri
         string uri;
     }

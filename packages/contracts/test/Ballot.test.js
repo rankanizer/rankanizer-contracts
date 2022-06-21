@@ -25,10 +25,12 @@ contract('Ballot', function (accounts) {
       await expectRevert(ballot3.createPoll(2, '', 0, { from: owner }),
         'The duration of the poll must be greater than zero');
 
+      expectEvent(await ballot3.createPoll(3, '', 5, { from: accountE }), 'PollCreated');
+
       const ballot4 = await Ballot.new();
       await ballot4.initialize({ from: owner });
-      await ballot4.createPoll(3, '', 5, { from: owner });
-      const hash = await ballot4.getLastPollHash();
+      const receipt = await ballot4.createPoll(3, '', 5, { from: owner });
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       const expire = (new BN(5)).add(await time.latestBlock());
       expect(await ballot4.expire(hash)).to.be.bignumber.equal(new BN(expire));
@@ -38,8 +40,8 @@ contract('Ballot', function (accounts) {
     it('creator only methods', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5, { from: owner });
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5, { from: owner });
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await expectRevert(
         ballot.votes(hash, { from: accountA }), 'This method should be called only by the poll\'s creator.');
       await expectRevert(
@@ -57,8 +59,8 @@ contract('Ballot', function (accounts) {
     it('creator or voter methods', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5, { from: owner });
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5, { from: owner });
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await ballot.vote(hash, [1], { from: accountA });
       ballot.voteOf(hash, accountA, { from: accountA });
       ballot.voteOf(hash, accountA, { from: owner });
@@ -71,8 +73,7 @@ contract('Ballot', function (accounts) {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
       await ballot.createPoll(3, '', 5, { from: owner });
-      let hash = await ballot.getLastPollHash();
-      hash = '0xc7d192c913a3e8099bc01a2520830ac822853710d241c1b13a1e68534e9676ed';
+      const hash = '0xc7d192c913a3e8099bc01a2520830ac822853710d241c1b13a1e68534e9676ed';
       await expectRevert(ballot.vote(hash, [1]), 'Invalid poll id. This poll doesn\'t exist.');
       await expectRevert(ballot.closePoll(hash), 'Invalid poll id. This poll doesn\'t exist.');
       await expectRevert(ballot.votesOf(hash, 0), 'Invalid poll id. This poll doesn\'t exist.');
@@ -86,12 +87,61 @@ contract('Ballot', function (accounts) {
         ballot.addVoter(hash, accountA, { from: owner }), 'Invalid poll id. This poll doesn\'t exist.');
     });
 
+    // Enumeration Methods
+    it('poll enumeration', async function () {
+      ballot = await Ballot.new();
+      await ballot.initialize({ from: owner });
+
+      let size = await ballot.pollCount();
+      expect(size).to.be.bignumber.equal('0');
+      const receipt = await ballot.createPoll(3, 'some_uri', 5, { from: accountA });
+      const hash = receipt.receipt.logs[0].args.pollHash;
+
+      let poll = await ballot.pollByHash(hash);
+      assert.equal(poll.uri, 'some_uri');
+
+      poll = await ballot.pollByIndex(0);
+      assert.equal(poll[1].uri, 'some_uri');
+
+      size = await ballot.pollCount();
+      expect(size).to.be.bignumber.equal('1');
+      await ballot.createPoll(3, '', 5, { from: accountB });
+
+      size = await ballot.pollCount();
+      expect(size).to.be.bignumber.equal('2');
+      await ballot.createPoll(3, '', 5, { from: accountC });
+
+      size = await ballot.pollCount();
+      expect(size).to.be.bignumber.equal('3');
+    });
+
+    it('poll owner enumeration', async function () {
+      ballot = await Ballot.new();
+      await ballot.initialize({ from: owner });
+
+      let size = await ballot.ownerPollCount(accountA);
+      expect(size).to.be.bignumber.equal('0');
+      await ballot.createPoll(3, 'some_uri', 5, { from: accountA });
+      await ballot.createPoll(3, 'other_uri', 5, { from: accountB });
+      await ballot.createPoll(3, 'another_uri', 5, { from: accountB });
+
+      size = await ballot.ownerPollCount(accountA);
+      expect(size).to.be.bignumber.equal('1');
+
+      size = await ballot.ownerPollCount(accountB);
+      expect(size).to.be.bignumber.equal('2');
+
+      const hash = await ballot.ownerPollByIndex(accountA, 0);
+      const poll = await ballot.pollByHash(hash);
+      assert.equal(poll.uri, 'some_uri');
+    });
+
     // Vote Tests
     it('vote', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5);
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await ballot.vote(hash, [1]);
       expect(await ballot.votesOf(hash, 1)).to.be.bignumber.equal('1');
       const votes = await await ballot.votes(hash);
@@ -101,32 +151,32 @@ contract('Ballot', function (accounts) {
     it('votes of nonexistent candidate', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5);
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await expectRevert(ballot.votesOf(hash, 100), 'Candidate doesn\'t exist.');
     });
 
     it('vote in nonexistent candidate', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5);
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await expectRevert(ballot.vote(hash, [100], { from: accountA }), 'Candidate doesn\'t exist.');
     });
 
     it('vote of nonexistent voter', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5, { from: owner });
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5, { from: owner });
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await expectRevert(ballot.voteOf(hash, accountA, { from: owner }), 'Voter must exist.');
     });
 
     it('get vote from user that didn\'t vote', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5, { from: owner });
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5, { from: owner });
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await ballot.addVoter(hash, accountA, { from: owner });
       await expectRevert(ballot.voteOf(hash, accountA, { from: owner }), 'Voter did not vote.');
     });
@@ -134,8 +184,8 @@ contract('Ballot', function (accounts) {
     it('vote again', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5);
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await ballot.vote(hash, [1]);
       await ballot.vote(hash, [0]);
       expect(await ballot.votesOf(hash, 1)).to.be.bignumber.equal('0');
@@ -145,17 +195,16 @@ contract('Ballot', function (accounts) {
     it('vote in more than one candidate', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5);
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await expectRevert(ballot.vote(hash, [0, 1], { from: accountA }), 'Voting must be for only one candidate.');
     });
 
     it('no votes', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      const r = await ballot.createPoll(3, '', 5);
-      console.log(r);
-      const hash = await ballot.getLastPollHash();
+      let receipt = await ballot.createPoll(3, '', 5);
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await time.advanceBlock();
       await time.advanceBlock();
@@ -163,15 +212,15 @@ contract('Ballot', function (accounts) {
       await time.advanceBlock();
       await time.advanceBlock();
 
-      const receipt = await ballot.closePoll(hash);
+      receipt = await ballot.closePoll(hash);
       assert.equal(receipt.receipt.logs[0].args.winners.length, 0);
     });
 
     it('votes and voted', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 6);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 6);
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [0], { from: accountA });
       const votes = await ballot.voteOf(hash, accountA);
@@ -185,8 +234,8 @@ contract('Ballot', function (accounts) {
     it('vote after closed', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 6);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 6);
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [0], { from: accountA });
       await ballot.vote(hash, [1], { from: accountB });
@@ -205,8 +254,8 @@ contract('Ballot', function (accounts) {
     it('votes in order odd sized candidates', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 6);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 6);
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [0], { from: accountA });
       await ballot.vote(hash, [1], { from: accountB });
@@ -219,8 +268,8 @@ contract('Ballot', function (accounts) {
     it('votes in order even sized candidates', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(4, '', 10);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(4, '', 10);
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [0], { from: accountA });
       await ballot.vote(hash, [1], { from: accountB });
@@ -237,8 +286,8 @@ contract('Ballot', function (accounts) {
     it('votes in reverse order odd sized candidates', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 6, { from: owner });
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 6, { from: owner });
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [2], { from: accountA });
       await ballot.vote(hash, [2], { from: accountB });
@@ -251,8 +300,8 @@ contract('Ballot', function (accounts) {
     it('votes in reverse order even sized candidates', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(4, '', 10);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(4, '', 10);
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [3], { from: accountA });
       await ballot.vote(hash, [3], { from: accountB });
@@ -270,16 +319,16 @@ contract('Ballot', function (accounts) {
     it('winners poll not closed', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5);
+      const hash = receipt.receipt.logs[0].args.pollHash;
       await expectRevert(ballot.winners(hash), 'This poll is not closed yet.');
     });
 
     it('one winner normal close', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5);
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [0], { from: accountA });
       await ballot.vote(hash, [1], { from: accountB });
@@ -289,30 +338,29 @@ contract('Ballot', function (accounts) {
       expectEvent(await ballot.vote(hash, [2], { from: accountE }), 'PollClosed');
       expect(await ballot.finished(hash)).to.be.equal(true);
       const winners = await ballot.winners(hash);
-      // assert.equal(winners[0].candidates[0], '2');
       assert.equal(winners[0], '2');
     });
 
     it('one winner forced close', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5, { from: owner });
-      const hash = await ballot.getLastPollHash();
+      let receipt = await ballot.createPoll(3, '', 5, { from: owner });
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [0], { from: accountA });
       await ballot.vote(hash, [1], { from: accountB });
       await ballot.vote(hash, [2], { from: accountC });
       await ballot.vote(hash, [2], { from: accountD });
 
-      const receipt = await ballot.closePoll(hash, { from: owner });
+      receipt = await ballot.closePoll(hash, { from: owner });
       assert.equal(receipt.receipt.logs[0].args.winners[0], '2');
     });
 
     it('already closed', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5, { from: owner });
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5, { from: owner });
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [0], { from: accountA });
       await ballot.vote(hash, [1], { from: accountB });
@@ -326,8 +374,8 @@ contract('Ballot', function (accounts) {
     it('two winners normal close', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      await ballot.createPoll(3, '', 5);
-      const hash = await ballot.getLastPollHash();
+      const receipt = await ballot.createPoll(3, '', 5);
+      const hash = receipt.receipt.logs[0].args.pollHash;
 
       await ballot.vote(hash, [1], { from: accountA });
       await ballot.vote(hash, [1], { from: accountB });
