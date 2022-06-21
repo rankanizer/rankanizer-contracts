@@ -14,6 +14,8 @@ import "./CondorcetVoting.sol";
 contract SchulzeVoting is CondorcetVoting {
     using EnumerableVotersMap for EnumerableVotersMap.Map;
     using EnumerableVotersMap for EnumerableVotersMap.Voter;
+    using EnumerablePollsMap for EnumerablePollsMap.Map;
+    using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
     function initialize() external override initializer {
         __SchulzeVoting_init();
@@ -30,9 +32,9 @@ contract SchulzeVoting is CondorcetVoting {
     /**
      * @dev It tries to find a Condorcet winner. If there isn't one, calculate Schulze winner(s)
      */
-    function _calculateWinners(uint256 pollId) internal virtual override returns (bool) {
-        if (!super._calculateWinners(pollId)) {
-            return _runSchulzeVoting(pollId);
+    function _calculateWinners(bytes32 pollHash) internal virtual override returns (bool) {
+        if (!super._calculateWinners(pollHash)) {
+            return _runSchulzeVoting(pollHash);
         } else {
             return true;
         }
@@ -41,7 +43,7 @@ contract SchulzeVoting is CondorcetVoting {
     /**
      * @dev Calculats Schulze winner(s) returning a ranked list: { place: 1, indexes: [1, 3] }
      */
-    function _runSchulzeVoting(uint256 pollId) internal returns (bool) {
+    function _runSchulzeVoting(bytes32 pollHash) internal returns (bool) {
         uint256 n = _rank.length;
 
         // Paths Matrix
@@ -86,7 +88,7 @@ contract SchulzeVoting is CondorcetVoting {
             }
         }
 
-        ranksToGroups(pollId, wins);
+        ranksToGroups(pollHash, wins);
 
         return true;
     }
@@ -101,14 +103,14 @@ contract SchulzeVoting is CondorcetVoting {
      *  ]
      */
     function ranksToGroups(
-        uint256 pollId,
+        bytes32 pollHash,
         uint256[] memory ranks /** pure */
     ) public returns (uint256[] memory) {
         uint256 n = ranks.length;
         uint256[] memory byRank = new uint256[](n);
 
         // // Temporary memory array to avoid the use of a storage variable
-        uint256[] memory temp = new uint256[](_polls[pollId]._candidates.length);
+        uint256[] memory temp = new uint256[](_polls.get(pollHash).candidates);
         uint256 size = 0;
 
         QuickSort.sortRef(ranks, byRank);
@@ -126,10 +128,10 @@ contract SchulzeVoting is CondorcetVoting {
         }
 
         for (uint256 i = 0; i < size; i++) {
-            _winners[pollId].push(temp[i]);
+            _winners[pollHash].push(temp[i]);
         }
 
-        return _winners[pollId];
+        return _winners[pollHash];
     }
 
     uint256[50] private __gap;

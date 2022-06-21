@@ -15,6 +15,8 @@ contract CondorcetVoting is Ballot {
     using AddressUpgradeable for address;
     using EnumerableVotersMap for EnumerableVotersMap.Map;
     using EnumerableVotersMap for EnumerableVotersMap.Voter;
+    using EnumerablePollsMap for EnumerablePollsMap.Map;
+    using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
     // Possible optimization: main diagonal is not used
     uint256[][] internal _rank;
@@ -34,19 +36,21 @@ contract CondorcetVoting is Ballot {
     // solhint-disable-next-line func-name-mixedcase
     function __CondorcetVoting_init_unchained() internal {}
 
-    function createPoll(string[] memory candidates, uint256 newDuration) public override returns (uint256) {
-        require(candidates.length > 1, "The list of candidates should have at least two elements");
+    function createPoll(
+        uint256 candidates,
+        string memory uri,
+        uint256 newDuration
+    ) public virtual override returns (bytes32) {
+        bytes32 pollHash = super.createPoll(candidates, uri, newDuration);
 
-        uint256 pollId = super.createPoll(candidates, newDuration);
-
-        uint256 n = _polls[pollId]._candidates.length;
+        uint256 n = _polls.get(pollHash).candidates;
 
         _rank = new uint256[][](n);
         for (uint256 i = 0; i < n; i++) {
             _rank[i] = new uint256[](n);
         }
 
-        return pollId;
+        return pollHash;
     }
 
     /**
@@ -78,13 +82,13 @@ contract CondorcetVoting is Ballot {
      * - Every candidate in `userRanking` should exist.
      * - `userRanking` must have the same size as `_candidates`
      */
-    function vote(uint256 pollId, uint256[] memory userRanking) public override didNotExpire(pollId) {
-        require(userRanking.length == _polls[pollId]._candidates.length, "Voting must be casted for all candidates.");
+    function vote(bytes32 pollHash, uint256[] memory userRanking) public override didNotExpire(pollHash) {
+        require(userRanking.length == _polls.get(pollHash).candidates, "Voting must be casted for all candidates.");
         for (uint256 i = 0; i < userRanking.length; i++) {
-            require(userRanking[i] < _polls[pollId]._candidates.length, "Candidate doesn't exist.");
+            require(userRanking[i] < _polls.get(pollHash).candidates, "Candidate doesn't exist.");
         }
 
-        EnumerableVotersMap.Voter storage ranker = _voters[pollId].getUnchecked(msg.sender);
+        EnumerableVotersMap.Voter storage ranker = _voters[pollHash].getUnchecked(msg.sender);
 
         if (ranker.voted) {
             _updateVotes(ranker.vote, false);
@@ -99,11 +103,11 @@ contract CondorcetVoting is Ballot {
     /**
      * @dev Calculates `_winners` and returns true if there is only one winner, false otherwise.
      */
-    function _calculateWinners(uint256 pollId) internal virtual override returns (bool) {
+    function _calculateWinners(bytes32 pollHash) internal virtual override returns (bool) {
         bool hasWinners = false;
 
         // Temporary memory array to avoid the use of a storage variable
-        uint256[] memory temp = new uint256[](_polls[pollId]._candidates.length);
+        uint256[] memory temp = new uint256[](_polls.get(pollHash).candidates);
         uint256 size = 0;
 
         for (uint256 i = 0; i < _rank.length; i++) {
@@ -123,7 +127,7 @@ contract CondorcetVoting is Ballot {
 
         if (size > 0) {
             for (uint256 i = 0; i < size; i++) {
-                _winners[pollId].push(temp[i]);
+                _winners[pollHash].push(temp[i]);
             }
             hasWinners = true;
         }

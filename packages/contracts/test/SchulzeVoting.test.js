@@ -25,7 +25,6 @@ contract('SchulzeVoting', function (accounts) {
 
   describe('the schulze method', () => {
     let schulze;
-    const id = 0;
 
     describe('Electowiki examples', () => {
       it('Several draws, two winners', async function () {
@@ -38,16 +37,15 @@ contract('SchulzeVoting', function (accounts) {
 
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        await schulze.createPoll(['A', 'B', 'C', 'D'], 100, { from: owner });
+        await schulze.createPoll(4, '', 100, { from: owner });
+        const hash = await schulze.getLastPollHash();
 
         for (let i = 0; i < election.length; i++) {
-          await schulze.vote(id, election[i], { from: accounts[i] });
+          await schulze.vote(hash, election[i], { from: accounts[i] });
         }
 
-        const receipt = await schulze.closePoll(id, { from: owner });
+        const receipt = await schulze.closePoll(hash, { from: owner });
 
-        // assert.equal(receipt.receipt.logs[0].args.winners[0].candidates[0], '3');
-        // assert.equal(receipt.receipt.logs[0].args.winners[0].candidates[1], '1');
         assert.equal(receipt.receipt.logs[0].args.winners[0], '3');
         assert.equal(receipt.receipt.logs[0].args.winners[1], '1');
       });
@@ -67,13 +65,14 @@ contract('SchulzeVoting', function (accounts) {
 
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        await schulze.createPoll(['A', 'B', 'C', 'D'], 100, { from: owner });
+        await schulze.createPoll(4, '', 100, { from: owner });
+        const hash = await schulze.getLastPollHash();
 
         for (let i = 0; i < election.length; i++) {
-          await schulze.vote(id, election[i], { from: accounts[i] });
+          await schulze.vote(hash, election[i], { from: accounts[i] });
         }
 
-        const receipt = await schulze.closePoll(id, { from: owner });
+        const receipt = await schulze.closePoll(hash, { from: owner });
 
         assert.equal(receipt.receipt.logs[0].args.winners[0], '3');
       });
@@ -92,13 +91,14 @@ contract('SchulzeVoting', function (accounts) {
         ]);
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        await schulze.createPoll(['A', 'B', 'C', 'D', 'E'], 100, { from: owner });
+        await schulze.createPoll(5, '', 100, { from: owner });
+        const hash = await schulze.getLastPollHash();
 
         for (let i = 0; i < election.length; i++) {
-          await schulze.vote(id, election[i], { from: accounts[i] });
+          await schulze.vote(hash, election[i], { from: accounts[i] });
         }
 
-        const receipt = await schulze.closePoll(id, { from: owner });
+        const receipt = await schulze.closePoll(hash, { from: owner });
 
         assert.equal(receipt.receipt.logs[0].args.winners[0], '1');
       });
@@ -117,13 +117,14 @@ contract('SchulzeVoting', function (accounts) {
 
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        await schulze.createPoll(['A', 'B', 'C', 'D', 'E'], 100, { from: owner });
+        await schulze.createPoll(5, '', 100, { from: owner });
+        const hash = await schulze.getLastPollHash();
 
         for (let i = 0; i < election.length; i++) {
-          await schulze.vote(id, election[i], { from: accounts[i] });
+          await schulze.vote(hash, election[i], { from: accounts[i] });
         }
 
-        const receipt = await schulze.closePoll(id, { from: owner });
+        const receipt = await schulze.closePoll(hash, { from: owner });
 
         assert.equal(receipt.receipt.logs[0].args.winners[0], '4');
       });
@@ -131,20 +132,19 @@ contract('SchulzeVoting', function (accounts) {
       it('Condorcet Winner', async function () {
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        await schulze.createPoll(['Cthulhu', 'Nyar', 'Shubb'], 7, { from: owner });
+        await schulze.createPoll(3, '', 7, { from: owner });
+        const hash = await schulze.getLastPollHash();
 
-        await schulze.vote(id, [0, 1, 2], { from: accountA });
-        await schulze.vote(id, [2, 0, 1], { from: accountB });
-        await schulze.vote(id, [1, 0, 2], { from: accountC });
-        await schulze.vote(id, [2, 0, 1], { from: accountD });
-        await schulze.vote(id, [1, 0, 2], { from: accountE });
-        await schulze.vote(id, [1, 2, 0], { from: accountF });
+        await schulze.vote(hash, [0, 1, 2], { from: accountA });
+        await schulze.vote(hash, [2, 0, 1], { from: accountB });
+        await schulze.vote(hash, [1, 0, 2], { from: accountC });
+        await schulze.vote(hash, [2, 0, 1], { from: accountD });
+        await schulze.vote(hash, [1, 0, 2], { from: accountE });
+        await schulze.vote(hash, [1, 2, 0], { from: accountF });
 
-        expectEvent(await schulze.vote(id, [2, 0, 1], { from: accountG }), 'PollClosed');
-        const winners = await schulze.winners(id, { from: owner });
+        expectEvent(await schulze.vote(hash, [2, 0, 1], { from: accountG }), 'PollClosed');
+        const winners = await schulze.winners(hash, { from: owner });
         assert.equal(winners.length, '1');
-        // assert.equal(winners[0].candidates.length, '1');
-        // assert.equal(winners[0].candidates[0], '1');
         assert.equal(winners[0], '1');
       });
     });
