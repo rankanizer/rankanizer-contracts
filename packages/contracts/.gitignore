@@ -57,3 +57,6 @@ allFiredEvents
 # hardhat
 cache
 artifacts
+
+# UML documentation
+contracts.svg

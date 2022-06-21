@@ -16,25 +16,25 @@ interface Votable {
         uint256[] candidates;
     }
 
-    event PollClosed(Group[] winners);
+    event PollClosed(bytes32 pollHash, uint256[] winners);
 
-    function closePoll() external;
+    event PollCreated(bytes32 indexed pollHash, address indexed owner, string uri);
 
-    function vote(uint256[] memory ranking) external;
+    function closePoll(bytes32 pollHash) external;
 
-    function candidatesList() external view returns (string[] memory);
+    function vote(bytes32 pollHash, uint256[] memory ranking) external;
 
-    function votesOf(uint256 candidateIndex) external view returns (uint256);
+    function votesOf(bytes32 pollHash, uint256 candidateIndex) external view returns (uint256);
 
-    function voteOf(address voter) external view returns (uint256[] memory);
+    function voteOf(bytes32 pollHash, address voter) external view returns (uint256[] memory);
 
-    function didVote(address voter) external view returns (bool);
+    function didVote(bytes32 pollHash, address voter) external view returns (bool);
 
-    function votes() external view returns (uint256[] memory);
+    function votes(bytes32 pollHash) external view returns (uint256[] memory);
 
-    function winners() external view returns (Group[] memory);
+    function winners(bytes32 pollHash) external view returns (uint256[] memory);
 
-    function expire() external view returns (uint256);
+    function expire(bytes32 pollHash) external view returns (uint256);
 
-    function finished() external view returns (bool);
+    function finished(bytes32 pollHash) external view returns (bool);
 }
