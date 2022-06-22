@@ -29,8 +29,9 @@ class Navigation extends Component {
     return (
       <nav>
         <ul>
-          <li><NavLink activeClassName='current' to='/'>My Polls</NavLink></li>
-          <li><NavLink activeClassName='current' to='/create'>Create Poll</NavLink></li>
+          <li><NavLink activeClassName='current' to='/'>Create Poll</NavLink></li>
+          <li><NavLink activeClassName='current' to='/allpolls'>All Polls</NavLink></li>
+          <li><NavLink activeClassName='current' to='/mypolls'>My Polls</NavLink></li>
           <li><NavLink activeClassName='current' to='/vote'>Vote</NavLink></li>
           <li><NavLink activeClassName='current' to='/results'>Results</NavLink></li>
         </ul>

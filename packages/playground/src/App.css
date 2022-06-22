@@ -17,7 +17,7 @@ html {
 nav ul {
   list-style: none;
   display: flex;
-  background-color: green;
+  background-color: #005d28;
   margin-bottom: 20px;
 }
 
@@ -35,12 +35,12 @@ nav ul li a {
 }
 
 h2 {
-  color: green;
+  color: #005d28;
   margin-bottom: 20px;
 }
 
 h1 {
-  color: green;
+  color: #005d28;
   margin-bottom: 20px;
 }
 

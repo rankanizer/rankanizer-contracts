@@ -12,13 +12,7 @@ import Ballot from '@rankanizer-contracts/contracts/artifacts/contracts/Ballot.s
 function App () {
   const [account, setAccount] = useState();
   const [owner, setOwner] = useState();
-  const [open, setOpen] = useState();
-  const [voted, setVoted] = useState();
-  const [votes, setVotes] = useState();
   const [ballot, setBallot] = useState();
-  const [expire, setExpire] = useState();
-  const [candidate, setCandidate] = useState();
-  const [candidates, setCandidates] = useState();
 
   useEffect(() => {
     async function load () {
@@ -48,27 +42,6 @@ function App () {
 
         const owner = await ballot.methods.owner().call();
         setOwner(owner.toLowerCase());
-        console.log(owner);
-
-        const expire = await ballot.methods.expire().call();
-        setExpire(expire);
-
-        const votes = await ballot.methods.votes().call();
-        setVotes(votes);
-
-        const open = await ballot.methods.finished().call();
-        setOpen(!open);
-
-        const voted = await ballot.methods.didVote(accounts[0]).call();
-        setVoted(voted);
-
-        if (voted) {
-          const candidate = parseInt(await ballot.methods.voteOf(accounts[0]).call());
-          setCandidate(candidate + 1);
-        }
-
-        const candidates = await ballot.methods.votes().call();
-        setCandidates(candidates.length);
       } else {
         console.log('Please install MetaMask!');
       }
@@ -85,13 +58,7 @@ function App () {
         owner = { owner } />
       <MainPage
         ballot = { ballot }
-        expire = { expire }
-        account = { account }
-        open = { open }
-        votes = { votes }
-        voted = { voted }
-        candidate = { candidate }
-        candidates = { candidates } />
+        account = { account } />
     </div>
   );
 }
