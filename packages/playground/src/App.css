@@ -15,6 +15,7 @@ html {
 }
 
 nav ul {
+  border-radius: 12px;
   list-style: none;
   display: flex;
   background-color: #005d28;
@@ -46,4 +47,16 @@ h1 {
 
 p {
   margin-bottom: 15px;
+}
+
+.footnote {
+  font-size: 12px;
+  background-color: #92eeb5;
+  padding: 1rem;
+  margin: 2rem auto;
+  width: 50rem;
+  max-width: 95%;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
 }

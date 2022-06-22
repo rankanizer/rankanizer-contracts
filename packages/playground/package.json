@@ -19,8 +19,11 @@
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject",
+    "lint": "npm run lint:js",
+    "lint:js": "eslint --ignore-path .gitignore .",
     "lint:fix": "npm run lint:js:fix",
-    "lint:js:fix": "eslint --ignore-path .gitignore . --fix"
+    "lint:js:fix": "eslint --ignore-path .gitignore . --fix",
+    "lint:init": "eslint --init"
   },
   "browserslist": {
     "production": [
@@ -38,8 +41,15 @@
     "assert": "^2.0.0",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.0",
+    "eslint": "^8.18.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.3",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-react": "^7.30.0",
     "https-browserify": "^1.0.0",
     "os-browserify": "^0.3.0",
+    "prettier": "^2.7.1",
     "process": "^0.11.10",
     "react-app-rewired": "^2.2.1",
     "stream-browserify": "^3.0.0",

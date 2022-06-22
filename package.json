@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test --workspaces",
-    "start": "npm run start --workspaces @rankanizer-contracts/playground"
+    "start": "npm run start --workspace @rankanizer-contracts/playground"
   },
   "author": "",
   "license": "ISC",

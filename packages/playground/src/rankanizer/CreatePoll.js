@@ -37,15 +37,16 @@ const CreatePoll = (props) => {
         <div className="new-poll__controls">
           <div className="new-poll__control">
             <label>Candidates</label>
-            <input type="number" min="2" step="1" value={enteredCandidates} onChange={candidatesChangeHandler}/>
+            <input type="number" required min="2" step="1"
+              value={enteredCandidates} onChange={candidatesChangeHandler}/>
           </div>
           <div className="new-poll__control">
             <label>Duration</label>
-            <input type="number" min="1" step="1" value={enteredDuration} onChange={durationChangeHandler}/>
+            <input type="number" required min="1" step="1" value={enteredDuration} onChange={durationChangeHandler}/>
           </div>
           <div className="new-poll__control">
             <label>URI</label>
-            <input type="text" value={enteredUri} onChange={uriChangeHandler}/>
+            <input type="text" required value={enteredUri} onChange={uriChangeHandler}/>
           </div>
         </div>
         <div className="new-poll__actions">

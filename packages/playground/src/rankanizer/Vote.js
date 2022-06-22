@@ -6,7 +6,7 @@ const Vote = (props) => {
   const [enteredPoll, setEnteredPoll] = useState('');
   const [sizeCandidates, setSizeCandidates] = useState('');
   const [voted, setVoted] = useState(false);
-  const [vote, setVote] = useState(0);
+  const [finished, setFinished] = useState(true);
   const [hash, setHash] = useState('');
 
   const candidateChangeHandler = (event) => {
@@ -23,8 +23,11 @@ const Vote = (props) => {
       setVoted(voted);
       if (voted) {
         const vote = await props.ballot.methods.voteOf(result[0], props.account).call({ from: props.account });
-        setVote(parseInt(vote) + 1);
+        setEnteredCandidate(parseInt(vote) + 1);
+      } else {
+        setEnteredCandidate('');
       }
+      setFinished(result[1].finished);
     }
   };
 
@@ -53,38 +56,16 @@ const Vote = (props) => {
             <input type="number"
               min="1" step="1"
               value={enteredCandidate}
-              placeholder={voted
-                ? vote
-                : 'From 1 to ' + sizeCandidates} required onChange={candidateChangeHandler}/>
+              max={sizeCandidates}
+              placeholder={'From 1 to ' + sizeCandidates} required onChange={candidateChangeHandler}/>
           </div>
         </div>
         <div className="new-poll__actions">
           <button type="button" onClick={props.onCancel}>Cancel</button>
-          <button type="submit">{voted ? 'Change Vote' : 'Vote'}</button>
+          <button type="submit" disabled={finished}>{voted ? 'Change Vote' : 'Vote'}</button>
         </div>
       </form>
     </div>
-    // <div className='home'>
-    //   <h2>Vote</h2>
-    //   <form className='mb-3'
-    //     onSubmit={(event) => {
-    //       event.preventDefault();
-    //       const selected = parseInt(this.candidate.value.toString());
-    //       this.props.ballot.methods
-    //         .vote([selected - 1])
-    //         .send({ from: this.props.account });
-    //     }}
-    //   >
-    //     <div style={{ boardspacing: '0 1em' }}>
-    //       <label className='float-left' style={{ marginLeft: '15px' }}><b>Candidate:</b></label>&nbsp;&nbsp;
-    //       <input ref={(input) => { this.candidate = input; }} type='text'
-    //         placeholder={this.props.voted
-    //           ? this.props.candidate
-    //           : 'From 1 to ' + this.props.candidates} required/>&nbsp;&nbsp;
-    //       <button type='submit' className='btn btn-primary'>{this.props.voted ? 'Change Vote' : 'Vote'}</button>
-    //     </div>
-    //   </form>
-    // </div>
   );
 };
 

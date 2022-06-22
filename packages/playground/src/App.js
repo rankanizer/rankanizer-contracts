@@ -13,7 +13,9 @@ function App () {
   const [account, setAccount] = useState();
   const [owner, setOwner] = useState();
   const [ballot, setBallot] = useState();
-  const [size, setSize] = useState();
+  const [size, setSize] = useState(0);
+  const [block, setBlock] = useState(0);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     async function load () {
@@ -46,9 +48,14 @@ function App () {
 
         const size = await ballot.methods.pollCount().call();
         setSize(size);
+
+        const block = await web3.eth.getBlockNumber();
+        setBlock(block);
       } else {
         console.log('Please install MetaMask!');
       }
+
+      setReady(true);
     }
 
     load().catch(console.error);
@@ -56,14 +63,17 @@ function App () {
 
   return (
     <div className='app'>
-      <h1>Rankanizer</h1><b>Account: { account }</b>
+      <h1>Rankanizer</h1>
       <Navigation
         account = { account }
         owner = { owner } />
-      <MainPage
-        ballot = { ballot }
-        account = { account }
-        size = { size } />
+      {ready &&
+        <MainPage
+          ballot = { ballot }
+          account = { account }
+          size = { size } />
+      }
+      <div className='footnote'><b>Account:</b><i>{ account }</i> - <b>Block:</b><i>{block}</i></div>
     </div>
   );
 }
