@@ -6,8 +6,8 @@ module.exports = async function (deployer, network, accounts) {
   const ballot = await Ballot.deployed();
   await ballot.initialize({ from: accounts[0] });
 
-  await ballot.createPoll(3, 'https://www.rankanizer.com/home', 6, { from: accounts[2] });
-  await ballot.createPoll(8, 'https://www.jurimetric.com.br/rankanizer.html', 10, { from: accounts[2] });
+  await ballot.createPoll(3, 'https://www.rankanizer.com/home', 30, { from: accounts[2] });
+  await ballot.createPoll(8, 'https://www.jurimetric.com.br/rankanizer.html', 15, { from: accounts[2] });
 
   const receipt = await ballot.createPoll(5, 'https://www.jurimetric.com.br/about.html', 5, { from: accounts[1] });
   const hash = receipt.receipt.logs[0].args.pollHash;
