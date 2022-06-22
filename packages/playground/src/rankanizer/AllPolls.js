@@ -2,20 +2,19 @@ import { useState, useEffect } from 'react';
 import PollsItem from './PollsItem';
 import './rankanizer.css';
 
-function MyPolls (props) {
+function AllPolls (props) {
   const [polls, setPolls] = useState([]);
 
   useEffect(() => {
     async function load () {
-      const size = await props.ballot.methods.ownerPollCount(props.account).call();
+      const size = await props.ballot.methods.pollCount().call();
 
       const temp = [];
       for (let i = 0; i < size; i++) {
-        const hash = await props.ballot.methods.ownerPollByIndex(props.account, i).call();
-        const poll = await props.ballot.methods.pollByHash(hash).call();
+        const result = await props.ballot.methods.pollByIndex(i).call();
         const data = {
-          ...poll,
-          hash: hash,
+          ...result[1],
+          hash: result[0],
           index: i + 1,
         };
         temp.push(data);
@@ -27,7 +26,7 @@ function MyPolls (props) {
   }, []);
 
   return (
-    <ul className="polls-list">
+    <div className="polls-list">
       {polls.map((poll) => (
         <PollsItem
           candidates={poll.candidates}
@@ -38,8 +37,8 @@ function MyPolls (props) {
           key={poll.hash}
         />
       ))}
-    </ul>
+    </div>
   );
 };
 
-export default MyPolls;
+export default AllPolls;

@@ -12,13 +12,10 @@ import Ballot from '@rankanizer-contracts/contracts/artifacts/contracts/Ballot.s
 function App () {
   const [account, setAccount] = useState();
   const [owner, setOwner] = useState();
-  const [open, setOpen] = useState();
-  const [voted, setVoted] = useState();
-  const [votes, setVotes] = useState();
   const [ballot, setBallot] = useState();
-  const [expire, setExpire] = useState();
-  const [candidate, setCandidate] = useState();
-  const [candidates, setCandidates] = useState();
+  const [size, setSize] = useState(0);
+  const [block, setBlock] = useState(0);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     async function load () {
@@ -48,30 +45,17 @@ function App () {
 
         const owner = await ballot.methods.owner().call();
         setOwner(owner.toLowerCase());
-        console.log(owner);
 
-        const expire = await ballot.methods.expire().call();
-        setExpire(expire);
+        const size = await ballot.methods.pollCount().call();
+        setSize(size);
 
-        const votes = await ballot.methods.votes().call();
-        setVotes(votes);
-
-        const open = await ballot.methods.finished().call();
-        setOpen(!open);
-
-        const voted = await ballot.methods.didVote(accounts[0]).call();
-        setVoted(voted);
-
-        if (voted) {
-          const candidate = parseInt(await ballot.methods.voteOf(accounts[0]).call());
-          setCandidate(candidate + 1);
-        }
-
-        const candidates = await ballot.methods.votes().call();
-        setCandidates(candidates.length);
+        const block = await web3.eth.getBlockNumber();
+        setBlock(block);
       } else {
         console.log('Please install MetaMask!');
       }
+
+      setReady(true);
     }
 
     load().catch(console.error);
@@ -79,19 +63,17 @@ function App () {
 
   return (
     <div className='app'>
-      <h1>Rankanizer</h1><b>Account: { account }</b>
+      <h1>Rankanizer</h1>
       <Navigation
         account = { account }
         owner = { owner } />
-      <MainPage
-        ballot = { ballot }
-        expire = { expire }
-        account = { account }
-        open = { open }
-        votes = { votes }
-        voted = { voted }
-        candidate = { candidate }
-        candidates = { candidates } />
+      {ready &&
+        <MainPage
+          ballot = { ballot }
+          account = { account }
+          size = { size } />
+      }
+      <div className='footnote'><b>Account:</b><i>{ account }</i> - <b>Block:</b><i>{block}</i></div>
     </div>
   );
 }
