@@ -16,10 +16,8 @@ function Results (props) {
           const winners = await props.ballot.methods.winners(result[0]).call();
 
           const data = {
-            uri: result[1].uri,
-            candidates: result[1].candidates,
-            expire: result[1].expire,
-            finished: result[1].finished,
+            ...result[1],
+            hash: result[0],
             winners: winners,
             index: i + 1,
           };
@@ -41,7 +39,7 @@ function Results (props) {
           expire={poll.expire}
           finished={poll.finished}
           index={poll.index}
-          key={poll.owner + poll.uri}
+          key={poll.hash}
           winners={poll.winners.toString()}
         />
       ))}

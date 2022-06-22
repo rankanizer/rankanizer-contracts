@@ -14,10 +14,8 @@ function MyPolls (props) {
         const hash = await props.ballot.methods.ownerPollByIndex(props.account, i).call();
         const poll = await props.ballot.methods.pollByHash(hash).call();
         const data = {
-          uri: poll.uri,
-          candidates: poll.candidates,
-          expire: poll.expire,
-          finished: poll.finished,
+          ...poll,
+          hash: hash,
           index: i + 1,
         };
         temp.push(data);
@@ -37,7 +35,7 @@ function MyPolls (props) {
           expire={poll.expire}
           finished={poll.finished}
           index={poll.index}
-          key={poll.owner + poll.uri}
+          key={poll.hash}
         />
       ))}
     </ul>
