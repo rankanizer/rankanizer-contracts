@@ -13,6 +13,7 @@ function App () {
   const [account, setAccount] = useState();
   const [owner, setOwner] = useState();
   const [ballot, setBallot] = useState();
+  const [size, setSize] = useState();
 
   useEffect(() => {
     async function load () {
@@ -42,6 +43,9 @@ function App () {
 
         const owner = await ballot.methods.owner().call();
         setOwner(owner.toLowerCase());
+
+        const size = await ballot.methods.pollCount().call();
+        setSize(size);
       } else {
         console.log('Please install MetaMask!');
       }
@@ -58,7 +62,8 @@ function App () {
         owner = { owner } />
       <MainPage
         ballot = { ballot }
-        account = { account } />
+        account = { account }
+        size = { size } />
     </div>
   );
 }

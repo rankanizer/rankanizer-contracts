@@ -12,7 +12,14 @@ function AllPolls (props) {
       const temp = [];
       for (let i = 0; i < size; i++) {
         const result = await props.ballot.methods.pollByIndex(i).call();
-        temp.push(result[1]);
+        const data = {
+          uri: result[1].uri,
+          candidates: result[1].candidates,
+          expire: result[1].expire,
+          finished: result[1].finished,
+          index: i + 1,
+        };
+        temp.push(data);
       }
       setPolls(temp);
     }
@@ -21,17 +28,18 @@ function AllPolls (props) {
   }, []);
 
   return (
-    <ul className="polls-list">
+    <div className="polls-list">
       {polls.map((poll) => (
         <PollsItem
           candidates={poll.candidates}
           uri={poll.uri}
           expire={poll.expire}
           finished={poll.finished}
+          index={poll.index}
           key={poll.owner + poll.uri}
         />
       ))}
-    </ul>
+    </div>
   );
 };
 

@@ -3,22 +3,40 @@ import './rankanizer.css';
 
 const Vote = (props) => {
   const [enteredCandidate, setEnteredCandidate] = useState('');
+  const [enteredPoll, setEnteredPoll] = useState('');
+  const [sizeCandidates, setSizeCandidates] = useState('');
+  const [voted, setVoted] = useState(false);
+  const [vote, setVote] = useState(0);
+  const [hash, setHash] = useState('');
 
   const candidateChangeHandler = (event) => {
     setEnteredCandidate(event.target.value);
   };
 
-  const submitHandler = (event) => {
+  async function pollChangeHandler (event) {
+    if (event.target.value && event.target.value <= props.size) {
+      setEnteredPoll(event.target.value);
+      const result = await props.ballot.methods.pollByIndex(event.target.value - 1).call();
+      setSizeCandidates(result[1].candidates);
+      setHash(result[0]);
+      const voted = await props.ballot.methods.didVote(result[0], props.account).call();
+      setVoted(voted);
+      if (voted) {
+        const vote = await props.ballot.methods.voteOf(result[0], props.account).call({ from: props.account });
+        setVote(parseInt(vote) + 1);
+      }
+    }
+  };
+
+  async function submitHandler (event) {
     event.preventDefault();
 
-    // const expenseData = {
-    //     title: enteredTitle,
-    //     amount: +enteredAmount,
-    //     date: new Date(enteredDate)
-    // }
+    await props.ballot.methods
+      .vote(hash, [enteredCandidate - 1])
+      .send({ from: props.account });
 
-    // props.onSaveExpenseData(expenseData);
     setEnteredCandidate('');
+    setEnteredPoll('');
   };
 
   return (
@@ -26,13 +44,23 @@ const Vote = (props) => {
       <form onSubmit={submitHandler}>
         <div className="new-poll__controls">
           <div className="new-poll__control">
+            <label>Poll</label>
+            <input type="number"
+              min="1" step="1" max={props.size} value={enteredPoll} required onChange={pollChangeHandler}/>
+          </div>
+          <div className="new-poll__control">
             <label>Candidate</label>
-            <input type="number" min="1" step="1" value={enteredCandidate} onChange={candidateChangeHandler}/>
+            <input type="number"
+              min="1" step="1"
+              value={enteredCandidate}
+              placeholder={voted
+                ? vote
+                : 'From 1 to ' + sizeCandidates} required onChange={candidateChangeHandler}/>
           </div>
         </div>
         <div className="new-poll__actions">
           <button type="button" onClick={props.onCancel}>Cancel</button>
-          <button type="submit">Vote</button>
+          <button type="submit">{voted ? 'Change Vote' : 'Vote'}</button>
         </div>
       </form>
     </div>

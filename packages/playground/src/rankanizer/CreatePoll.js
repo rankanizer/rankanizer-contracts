@@ -19,29 +19,13 @@ const CreatePoll = (props) => {
     setEnteredUri(event.target.value);
   };
 
-  const createPoll = () => {
-    const candidatesList = [];
-    const n = parseInt(enteredCandidates);
-    let i;
-    for (i = 1; i <= n; i++) {
-      candidatesList[i - 1] = i.toString();
-    }
-    console.log(this.props.ballot);
-    this.props.ballot.methods
-      .initialize(candidatesList, this.duration.value.toString())
-      .send({ from: this.props.account });
-  };
-
   const submitHandler = (event) => {
     event.preventDefault();
 
-    // const expenseData = {
-    //     title: enteredTitle,
-    //     amount: +enteredAmount,
-    //     date: new Date(enteredDate)
-    // }
+    props.ballot.methods
+      .createPoll(parseInt(enteredCandidates), enteredUri, enteredDuration)
+      .send({ from: props.account });
 
-    // props.onSaveExpenseData(expenseData);
     setEnteredCandidates('');
     setEnteredDuration('');
     setEnteredUri('');
