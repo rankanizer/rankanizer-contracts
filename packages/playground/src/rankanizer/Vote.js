@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './rankanizer.css';
 
 const Vote = (props) => {
@@ -8,13 +8,23 @@ const Vote = (props) => {
   const [voted, setVoted] = useState(false);
   const [finished, setFinished] = useState(true);
   const [hash, setHash] = useState('');
+  const [size, setSize] = useState(0);
+
+  useEffect(() => {
+    async function load () {
+      const size = await props.ballot.methods.pollCount().call();
+      setSize(size);
+    }
+
+    load().catch(console.error);
+  }, []);
 
   const candidateChangeHandler = (event) => {
     setEnteredCandidate(event.target.value);
   };
 
   async function pollChangeHandler (event) {
-    if (event.target.value && event.target.value <= props.size) {
+    if (event.target.value && event.target.value <= size) {
       setEnteredPoll(event.target.value);
       const result = await props.ballot.methods.pollByIndex(event.target.value - 1).call();
       setSizeCandidates(result[1].candidates);
@@ -49,7 +59,7 @@ const Vote = (props) => {
           <div className="new-poll__control">
             <label>Poll</label>
             <input type="number"
-              min="1" step="1" max={props.size} value={enteredPoll} required onChange={pollChangeHandler}/>
+              min="1" step="1" max={size} value={enteredPoll} required onChange={pollChangeHandler}/>
           </div>
           <div className="new-poll__control">
             <label>Candidate</label>

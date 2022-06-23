@@ -13,7 +13,6 @@ function App () {
   const [account, setAccount] = useState();
   const [owner, setOwner] = useState();
   const [ballot, setBallot] = useState();
-  const [size, setSize] = useState(0);
   const [block, setBlock] = useState(0);
   const [ready, setReady] = useState(false);
 
@@ -46,9 +45,6 @@ function App () {
         const owner = await ballot.methods.owner().call();
         setOwner(owner.toLowerCase());
 
-        const size = await ballot.methods.pollCount().call();
-        setSize(size);
-
         const block = await web3.eth.getBlockNumber();
         setBlock(block);
       } else {
@@ -70,8 +66,7 @@ function App () {
       {ready &&
         <MainPage
           ballot = { ballot }
-          account = { account }
-          size = { size } />
+          account = { account } />
       }
       <div className='footnote'><b>Account:</b><i>{ account }</i> - <b>Block:</b><i>{block}</i></div>
     </div>
