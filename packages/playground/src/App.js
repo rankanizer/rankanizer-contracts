@@ -7,7 +7,7 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import MainPage from './rankanizer/MainPage';
 import Navigation from './rankanizer/Navigation.js';
 
-import Ballot from '@rankanizer-contracts/contracts/artifacts/contracts/Ballot.sol/Ballot.json';
+import Ballot from '@rankanizer-contracts/contracts/build/Ballot.json';
 
 function App () {
   const [account, setAccount] = useState();
