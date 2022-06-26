@@ -27,7 +27,6 @@ class MainPage extends Component {
         <Route exact path='/vote' element={<Vote
           ballot={this.props.ballot}
           account={this.props.account}
-          size={this.props.size}
         />}></Route>
         <Route exact path='/results' element={<Results
           ballot={this.props.ballot}

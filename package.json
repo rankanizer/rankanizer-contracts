@@ -5,12 +5,18 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run test --workspaces",
-    "start": "npm run start --workspace @rankanizer-contracts/playground"
+    "start": "npm run start --workspace @rankanizer-contracts/playground",
+    "migrate": "truffle migrate --reset --workspace @rankanizer-contracts/contracts",
+    "start-playground": "scripts/start-playground.sh"
   },
   "author": "",
   "license": "ISC",
   "workspaces": [
     "packages/contracts",
     "packages/playground"
-  ]
+  ],
+  "devDependencies": {
+    "ganache-cli": "^6.12.2",
+    "truffle": "^5.5.19"
+  }
 }

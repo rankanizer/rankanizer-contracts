@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import PollsItem from './PollsItem';
 import './rankanizer.css';
 
-function AllPolls (props) {
+const AllPolls = (props) => {
   const [polls, setPolls] = useState([]);
 
   useEffect(() => {
