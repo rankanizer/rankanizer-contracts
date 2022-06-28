@@ -20,6 +20,10 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
+    // Optimizations for storage saving
+    uint256 constant _BITS_PER_CANDIDATE = 5; 
+    uint256 constant _BITMASK = (2 ** _BITS_PER_CANDIDATE) - 1;
+
     mapping(bytes32 => EnumerableVotersMap.Map) _voters;
 
     // TODO Issue #6 - Refactoring the code
@@ -136,23 +140,46 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     {
         require(ranking.length == 1, "Voting must be for only one candidate.");
         uint256 candidateIndex = ranking[0];
-        require(candidateIndex < _polls.get(pollHash).candidates, "Candidate doesn't exist.");
+        uint256 candidates = _polls.get(pollHash).candidates;
+        require(candidateIndex < candidates, "Candidate doesn't exist.");
 
         EnumerableVotersMap.Voter storage voter = _voters[pollHash].getUnchecked(msg.sender);
+        uint256[] memory voterVotes;
+        address addressVoter;
 
         if (!voter.voted) {
+            voter.candidates = candidates;
             unchecked {
                 _polls.get(pollHash).votes[candidateIndex]++;
                 voter.voted = true;
             }
         } else {
+            (addressVoter, voterVotes) = _decodeVote(candidates, voter.voterAndVote);
             unchecked {
-                _polls.get(pollHash).votes[voter.vote[0]]--;
+                _polls.get(pollHash).votes[voterVotes[0]]--;
                 _polls.get(pollHash).votes[candidateIndex]++;
             }
         }
-        voter.vote = [candidateIndex];
+        voter.voterAndVote = _encodeVote(msg.sender, ranking);
         EnumerableVotersMap.set(_voters[pollHash], msg.sender, voter);
+
+        (addressVoter, voterVotes) = _decodeVote(candidates, voter.voterAndVote);
+    }
+
+    function _encodeVote(address voter, uint256[] memory rank) internal pure returns (uint256 encodedVote) {
+        encodedVote = uint256(uint160(voter)) << 96;
+        for (uint256 i=0; i<rank.length; i++) {
+            encodedVote |= (rank[i] << (_BITS_PER_CANDIDATE * i));
+        }
+    }
+
+    function _decodeVote(uint256 candidates, uint256 encodedVote) internal pure returns (address voter, uint256[] memory rank) {
+        voter = address(uint160(encodedVote >> 96));
+        rank = new uint256[](candidates);
+        for (uint256 i=0; i<rank.length; i++) {
+            rank[i] = encodedVote & _BITMASK;
+            encodedVote = encodedVote >> _BITS_PER_CANDIDATE;
+        }
     }
 
     /**
@@ -246,7 +273,7 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * - `voter` must have voted
      * - `voter` must exist
      */
-    function voteOf(bytes32 pollHash, address voter)
+    function voteOf(bytes32 pollHash, address voterAddress)
         external
         view
         override
@@ -254,12 +281,15 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         returns (uint256[] memory)
     {
         require(
-            msg.sender == _polls.get(pollHash).owner || msg.sender == voter,
+            msg.sender == _polls.get(pollHash).owner || msg.sender == voterAddress,
             "Only the creator or the voter may call this method."
         );
-        require(EnumerableVotersMap.contains(_voters[pollHash], voter), "Voter must exist.");
-        require(EnumerableVotersMap.get(_voters[pollHash], voter).voted, "Voter did not vote.");
-        return EnumerableVotersMap.get(_voters[pollHash], voter).vote;
+        require(EnumerableVotersMap.contains(_voters[pollHash], voterAddress), "Voter must exist.");
+        require(EnumerableVotersMap.get(_voters[pollHash], voterAddress).voted, "Voter did not vote.");
+        uint256[] memory voterVotes;
+        EnumerableVotersMap.Voter memory voter = EnumerableVotersMap.get(_voters[pollHash], voterAddress);
+        (,voterVotes) = _decodeVote(voter.candidates, voter.voterAndVote);
+        return voterVotes;
     }
 
     /**

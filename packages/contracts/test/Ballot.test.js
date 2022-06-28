@@ -219,12 +219,12 @@ contract('Ballot', function (accounts) {
     it('votes and voted', async function () {
       ballot = await Ballot.new();
       await ballot.initialize({ from: owner });
-      const receipt = await ballot.createPoll(3, '', 6);
+      let receipt = await ballot.createPoll(3, '', 6);
       const hash = receipt.receipt.logs[0].args.pollHash;
 
-      await ballot.vote(hash, [0], { from: accountA });
+      receipt = await ballot.vote(hash, [1], { from: accountA });
       const votes = await ballot.voteOf(hash, accountA);
-      assert.equal(votes[0], '0');
+      assert.equal(votes[0], '1');
       // eslint-disable-next-line no-unused-expressions
       expect(await ballot.didVote(hash, accountA)).to.be.true;
       // eslint-disable-next-line no-unused-expressions

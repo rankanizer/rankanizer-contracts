@@ -90,14 +90,17 @@ contract CondorcetVoting is Ballot {
 
         EnumerableVotersMap.Voter storage ranker = _voters[pollHash].getUnchecked(msg.sender);
 
+        uint256[] memory previousRank;
         if (ranker.voted) {
-            _updateVotes(ranker.vote, false);
+            (, previousRank) = _decodeVote(ranker.candidates, ranker.voterAndVote);
+            _updateVotes(previousRank, false);
         } else {
             ranker.voted = true;
+            ranker.candidates = userRanking.length;
         }
 
         _updateVotes(userRanking, true);
-        ranker.vote = userRanking;
+        ranker.voterAndVote = _encodeVote(msg.sender, userRanking);
     }
 
     /**
