@@ -13,18 +13,10 @@ import "./Votable.sol";
 /**
  * @dev Traditional voting system
  */
-contract Ballot is Votable, Initializable, OwnableUpgradeable {
+abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
     using AddressUpgradeable for address;
-    using EnumerableVotersMap for EnumerableVotersMap.Map;
-    using EnumerableVotersMap for EnumerableVotersMap.Voter;
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
-
-    // Optimizations for storage saving
-    uint256 constant _BITS_PER_CANDIDATE = 5; 
-    uint256 constant _BITMASK = (2 ** _BITS_PER_CANDIDATE) - 1;
-
-    mapping(bytes32 => EnumerableVotersMap.Map) _voters;
 
     // TODO Issue #6 - Refactoring the code
     mapping(bytes32 => uint256[]) _winners;
@@ -33,17 +25,6 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
 
     // Polls of the contract
     EnumerablePollsMap.Map internal _polls;
-
-    function initialize() external virtual initializer {
-        __Ballot_init();
-    }
-
-    // solhint-disable-next-line func-name-mixedcase
-    function __Ballot_init() internal {
-        __Context_init_unchained();
-        __Ownable_init_unchained();
-        __Ballot_init_unchained();
-    }
 
     // solhint-disable-next-line func-name-mixedcase
     function __Ballot_init_unchained() internal {}
@@ -109,9 +90,6 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     modifier didNotExpire(bytes32 pollHash) {
         require(_polls.get(pollHash).expire >= block.number, "This poll is closed. No more votes allowed");
         _;
-        if (_polls.get(pollHash).expire == block.number) {
-            _closePoll(pollHash);
-        }
     }
 
     /**
@@ -120,67 +98,6 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     modifier didExpire(bytes32 pollHash) {
         require(_polls.get(pollHash).expire <= block.number, "This poll is not closed yet.");
         _;
-    }
-
-    /**
-     * @dev Register the `ranking` of the account
-     *
-     * Requirements:
-     *
-     * - `ranking` must have only one elemnent.
-     * - the voted candidate must exist.
-     *
-     */
-    function vote(bytes32 pollHash, uint256[] memory ranking)
-        external
-        virtual
-        override
-        pollMustExist(pollHash)
-        didNotExpire(pollHash)
-    {
-        require(ranking.length == 1, "Voting must be for only one candidate.");
-        uint256 candidateIndex = ranking[0];
-        uint256 candidates = _polls.get(pollHash).candidates;
-        require(candidateIndex < candidates, "Candidate doesn't exist.");
-
-        EnumerableVotersMap.Voter storage voter = _voters[pollHash].getUnchecked(msg.sender);
-        uint256[] memory voterVotes;
-        address addressVoter;
-
-        if (!voter.voted) {
-            voter.candidates = candidates;
-            unchecked {
-                _polls.get(pollHash).votes[candidateIndex]++;
-                voter.voted = true;
-            }
-        } else {
-            (addressVoter, voterVotes) = _decodeVote(candidates, voter.voterAndVote);
-            unchecked {
-                _polls.get(pollHash).votes[voterVotes[0]]--;
-                _polls.get(pollHash).votes[candidateIndex]++;
-            }
-        }
-        voter.voterAndVote = _encodeVote(msg.sender, ranking);
-        EnumerableVotersMap.set(_voters[pollHash], msg.sender, voter);
-
-        (addressVoter, voterVotes) = _decodeVote(candidates, voter.voterAndVote);
-    }
-
-    function _encodeVote(address voter, uint256[] memory rank) internal pure returns (uint256 encodedVote) {
-        encodedVote = uint256(uint160(voter)) << 96;
-        uint256 size = rank.length;
-        for (uint256 i=0; i<size; i++) {
-            encodedVote |= (rank[i] << (_BITS_PER_CANDIDATE * i));
-        }
-    }
-
-    function _decodeVote(uint256 candidates, uint256 encodedVote) internal pure returns (address voter, uint256[] memory rank) {
-        voter = address(uint160(encodedVote >> 96));
-        rank = new uint256[](candidates);
-        for (uint256 i=0; i<candidates; i++) {
-            rank[i] = encodedVote & _BITMASK;
-            encodedVote = encodedVote >> _BITS_PER_CANDIDATE;
-        }
     }
 
     /**
@@ -268,51 +185,6 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
     }
 
     /**
-     * @dev Returns the vote of `voter`
-     *
-     * Requirements:
-     *
-     * - `voter` must have voted
-     * - `voter` must exist
-     */
-    function voteOf(bytes32 pollHash, address voterAddress)
-        external
-        view
-        override
-        pollMustExist(pollHash)
-        returns (uint256[] memory)
-    {
-        require(
-            msg.sender == _polls.get(pollHash).owner || msg.sender == voterAddress,
-            "Only the creator or the voter may call this method."
-        );
-        require(EnumerableVotersMap.contains(_voters[pollHash], voterAddress), "Voter must exist.");
-        require(EnumerableVotersMap.get(_voters[pollHash], voterAddress).voted, "Voter did not vote.");
-        uint256[] memory voterVotes;
-        EnumerableVotersMap.Voter memory voter = EnumerableVotersMap.get(_voters[pollHash], voterAddress);
-        (,voterVotes) = _decodeVote(voter.candidates, voter.voterAndVote);
-        return voterVotes;
-    }
-
-    /**
-     * @dev add a `voter` to the list of `_voters`
-     *
-     */
-    function addVoter(bytes32 pollHash, address voterAddress) external pollMustExist(pollHash) pollOwnerOnly(pollHash) {
-        EnumerableVotersMap.Voter storage voter = _voters[pollHash].getUnchecked(voterAddress);
-        EnumerableVotersMap.set(_voters[pollHash], voterAddress, voter);
-    }
-
-    /**
-     * @dev Returns if `voter` has voted
-     *
-     */
-    function didVote(bytes32 pollHash, address voter) external view override pollMustExist(pollHash) returns (bool) {
-        if (!EnumerableVotersMap.contains(_voters[pollHash], voter)) return false;
-        return EnumerableVotersMap.get(_voters[pollHash], voter).voted;
-    }
-
-    /**
      * @dev Returns the votes of all candidates
      */
     function votes(bytes32 pollHash)
@@ -389,5 +261,5 @@ contract Ballot is Votable, Initializable, OwnableUpgradeable {
         return _pollsByOwner[owner][index];
     }
 
-    uint256[45] private __gap;
+    uint256[47] private __gap;
 }

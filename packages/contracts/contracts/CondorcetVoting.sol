@@ -18,10 +18,16 @@ contract CondorcetVoting is Ballot {
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
+    // Optimizations for storage saving
+    uint256 constant _BITS_PER_CANDIDATE = 5;
+    uint256 constant _BITMASK = (2**_BITS_PER_CANDIDATE) - 1;
+
+    mapping(bytes32 => EnumerableVotersMap.Map) _voters;
+
     // Possible optimization: main diagonal is not used
     uint256[][] internal _rank;
 
-    function initialize() external virtual override initializer {
+    function initialize() external virtual initializer {
         __CondorcetVoting_init();
     }
 
@@ -53,6 +59,27 @@ contract CondorcetVoting is Ballot {
         return pollHash;
     }
 
+    function _encodeVote(address voter, uint256[] memory rank) internal pure returns (uint256 encodedVote) {
+        encodedVote = uint256(uint160(voter)) << 96;
+        uint256 size = rank.length;
+        for (uint256 i = 0; i < size; i++) {
+            encodedVote |= (rank[i] << (_BITS_PER_CANDIDATE * i));
+        }
+    }
+
+    function _decodeVote(uint256 candidates, uint256 encodedVote)
+        internal
+        pure
+        returns (address voter, uint256[] memory rank)
+    {
+        voter = address(uint160(encodedVote >> 96));
+        rank = new uint256[](candidates);
+        for (uint256 i = 0; i < candidates; i++) {
+            rank[i] = encodedVote & _BITMASK;
+            encodedVote = encodedVote >> _BITS_PER_CANDIDATE;
+        }
+    }
+
     /**
      * @dev Updates `_rank`with `votes` according to `add`: if true it adds votes, if false it subtracts votes.
      */
@@ -82,9 +109,10 @@ contract CondorcetVoting is Ballot {
      * - Every candidate in `userRanking` should exist.
      * - `userRanking` must have the same size as `_candidates`
      */
-    function vote(bytes32 pollHash, uint256[] memory userRanking) public override didNotExpire(pollHash) {
+    function vote(bytes32 pollHash, uint256[] memory userRanking) public didNotExpire(pollHash) {
         require(userRanking.length == _polls.get(pollHash).candidates, "Voting must be casted for all candidates.");
-        for (uint256 i = 0; i < userRanking.length; i++) {
+        uint256 size = userRanking.length;
+        for (uint256 i = 0; i < size; i++) {
             require(userRanking[i] < _polls.get(pollHash).candidates, "Candidate doesn't exist.");
         }
 
@@ -101,6 +129,8 @@ contract CondorcetVoting is Ballot {
 
         _updateVotes(userRanking, true);
         ranker.voterAndVote = _encodeVote(msg.sender, userRanking);
+
+        EnumerableVotersMap.set(_voters[pollHash], msg.sender, ranker);
     }
 
     /**
@@ -140,6 +170,40 @@ contract CondorcetVoting is Ballot {
             hasWinners = true;
         }
         return (hasWinners);
+    }
+
+    /**
+     * @dev Returns the vote of `voter`
+     *
+     * Requirements:
+     *
+     * - `voter` must have voted
+     * - `voter` must exist
+     */
+    function voteOf(bytes32 pollHash, address voterAddress)
+        external
+        view
+        pollMustExist(pollHash)
+        returns (uint256[] memory)
+    {
+        require(
+            msg.sender == _polls.get(pollHash).owner || msg.sender == voterAddress,
+            "Only the creator or the voter may call this method."
+        );
+        require(EnumerableVotersMap.contains(_voters[pollHash], voterAddress), "Voter must exist.");
+        uint256[] memory voterVotes;
+        EnumerableVotersMap.Voter memory voter = EnumerableVotersMap.get(_voters[pollHash], voterAddress);
+        (, voterVotes) = _decodeVote(voter.candidates, voter.voterAndVote);
+        return voterVotes;
+    }
+
+    /**
+     * @dev Returns if `voter` has voted
+     *
+     */
+    function didVote(bytes32 pollHash, address voter) external view override pollMustExist(pollHash) returns (bool) {
+        if (!EnumerableVotersMap.contains(_voters[pollHash], voter)) return false;
+        return EnumerableVotersMap.get(_voters[pollHash], voter).voted;
     }
 
     uint256[49] private __gap;

@@ -1,7 +1,8 @@
-const { expectEvent } = require('@openzeppelin/test-helpers');
 const { assert } = require('chai');
 
 const SchulzeVoting = artifacts.require('SchulzeVoting');
+const seedrandom = require('seedrandom');
+const generator = seedrandom('rankanizer');
 
 contract('SchulzeVoting', function (accounts) {
   const [ owner,
@@ -141,11 +142,54 @@ contract('SchulzeVoting', function (accounts) {
         await schulze.vote(hash, [2, 0, 1], { from: accountD });
         await schulze.vote(hash, [1, 0, 2], { from: accountE });
         await schulze.vote(hash, [1, 2, 0], { from: accountF });
+        await schulze.vote(hash, [2, 0, 1], { from: accountG });
+        await schulze.closePoll(hash, { from: owner });
 
-        expectEvent(await schulze.vote(hash, [2, 0, 1], { from: accountG }), 'PollClosed');
         const winners = await schulze.winners(hash, { from: owner });
         assert.equal(winners.length, '1');
         assert.equal(winners[0], '1');
+      });
+
+      it('one vote per account', async function () {
+        const votes = accounts.length;
+        const candidates = 5;
+
+        schulze = await SchulzeVoting.new();
+        await schulze.initialize({ from: owner });
+        const receipt = await schulze.createPoll(candidates, '', votes + 1, { from: owner });
+        const hash = receipt.receipt.logs[0].args.pollHash;
+
+        for (let i = 0; i < votes; i++) {
+          const ranking = [];
+          for (let j = 0; j < candidates; j++) {
+            ranking[j] = Math.floor(generator() * candidates);
+          }
+          const voter = i;
+          await schulze.vote(hash, ranking, { from: accounts[voter] });
+        }
+
+        await schulze.closePoll(hash, { from: owner });
+      });
+
+      it('lots of votes', async function () {
+        const votes = Math.floor(generator() * 100) + 100;
+        const candidates = 5;
+
+        schulze = await SchulzeVoting.new();
+        await schulze.initialize({ from: owner });
+        const receipt = await schulze.createPoll(candidates, '', votes + 1, { from: owner });
+        const hash = receipt.receipt.logs[0].args.pollHash;
+
+        for (let i = 0; i < votes; i++) {
+          const ranking = [];
+          for (let j = 0; j < candidates; j++) {
+            ranking[j] = Math.floor(generator() * candidates);
+          }
+          const voter = Math.floor(generator() * accounts.length);
+          await schulze.vote(hash, ranking, { from: accounts[voter] });
+        }
+
+        await schulze.closePoll(hash, { from: owner });
       });
     });
   });
