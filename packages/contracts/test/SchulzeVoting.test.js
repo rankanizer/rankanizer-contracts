@@ -1,5 +1,6 @@
 const { expectEvent } = require('@openzeppelin/test-helpers');
 const { assert } = require('chai');
+const { ethers, upgrades } = require("hardhat");
 
 const SchulzeVoting = artifacts.require('SchulzeVoting');
 
@@ -146,6 +147,42 @@ contract('SchulzeVoting', function (accounts) {
         const winners = await schulze.winners(hash, { from: owner });
         assert.equal(winners.length, '1');
         assert.equal(winners[0], '1');
+      });
+    });
+
+    describe.only('Deployment tests', () => { 
+      it('works before and after upgrading', async function () {
+        const election = createElection('ABCD')([
+          [5, 'ACBD'],
+          [2, 'ACDB'],
+          [3, 'ADCB'],
+          [4, 'BACD'],
+          [3, 'CBDA'],
+          [3, 'CDBA'],
+          [1, 'DACB'],
+          [5, 'DBAC'],
+          [4, 'DCBA'],
+        ]);
+        const accounts = await ethers.getSigners();
+        const [owner, addr1] = accounts
+
+        const SchulzeVoting = await ethers.getContractFactory("SchulzeVoting");
+        const schulze = await upgrades.deployProxy(SchulzeVoting);
+        await schulze.deployed();
+      
+        let transaction = await schulze.connect(owner).createPoll(4, '', 100);
+        let receipt = await transaction.wait()
+
+        const hash = receipt.logs[0].topics[1];
+
+        for (let i = 0; i < election.length; i++) {
+          await schulze.connect(accounts[i]).vote(hash, election[i]);
+        }
+
+        transaction = await schulze.connect(owner).closePoll(hash);
+        receipt = await transaction.wait()
+
+        expect(receipt.status).to.be.eq(1)
       });
     });
   });
