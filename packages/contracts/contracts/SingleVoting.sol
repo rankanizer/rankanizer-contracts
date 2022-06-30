@@ -20,6 +20,7 @@ contract SingleVoting is Ballot {
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
+    // Every voter of the poll
     mapping(bytes32 => EnumerableSingleVotersMap.Map) _voters;
 
     function initialize() external virtual initializer {
@@ -38,33 +39,62 @@ contract SingleVoting is Ballot {
     function __SingleVoting_init_unchained() internal {}
 
     /**
-     * @dev Register the `ranking` of the account
+     * @dev Register the vote `candidateIndex` of the account
      *
      * Requirements:
      *
-     * - `ranking` must have only one elemnent.
      * - the voted candidate must exist.
+     * - the voter must haven't vote yet.
      *
      */
-    function vote(bytes32 pollHash, uint256 candidateIndex)
+    function vote(bytes32 pollHash, uint128 candidateIndex)
         external
         virtual
         pollMustExist(pollHash)
         didNotExpire(pollHash)
     {
-        uint256 candidates = _polls.get(pollHash).candidates;
+        EnumerablePollsMap.Poll storage poll = _polls.get(pollHash);
+        uint256 candidates = poll.candidates;
         require(candidateIndex < candidates, "Candidate doesn't exist.");
 
         EnumerableSingleVotersMap.SingleVoter storage voter = _voters[pollHash].getUnchecked(msg.sender);
+        require(!voter.voted, "Voter already voted. Call changeVote instead.");
 
-        if (voter.voted) {
-            unchecked {
-                _polls.get(pollHash).votes[voter.vote]--;
-            }
-        } else voter.voted = true;
+        voter.voted = true;
+        voter.vote = candidateIndex;
 
         unchecked {
-            _polls.get(pollHash).votes[candidateIndex]++;
+            poll.votes[candidateIndex]++;
+        }
+
+        EnumerableSingleVotersMap.set(_voters[pollHash], msg.sender, voter);
+    }
+
+    /**
+     * @dev Change the vote `candidateIndex` of the account
+     *
+     * Requirements:
+     *
+     * - the voted candidate must exist.
+     * - the voter must have voted before.
+     *
+     */
+    function changeVote(bytes32 pollHash, uint128 candidateIndex)
+        external
+        virtual
+        pollMustExist(pollHash)
+        didNotExpire(pollHash)
+    {
+        EnumerablePollsMap.Poll storage poll = _polls.get(pollHash);
+        uint256 candidates = poll.candidates;
+        require(candidateIndex < candidates, "Candidate doesn't exist.");
+
+        EnumerableSingleVotersMap.SingleVoter storage voter = _voters[pollHash].getUnchecked(msg.sender);
+        require(voter.voted, "Voter didn't vote yet. Call vote instead.");
+
+        unchecked {
+            poll.votes[voter.vote]--;
+            poll.votes[candidateIndex]++;
         }
 
         voter.vote = candidateIndex;
@@ -81,7 +111,7 @@ contract SingleVoting is Ballot {
      */
     function voteOf(bytes32 pollHash, address voterAddress) external view pollMustExist(pollHash) returns (uint256) {
         require(
-            msg.sender == _polls.get(pollHash).owner || msg.sender == voterAddress,
+            msg.sender == _polls.getUnchecked(pollHash).owner || msg.sender == voterAddress,
             "Only the creator or the voter may call this method."
         );
         require(EnumerableSingleVotersMap.contains(_voters[pollHash], voterAddress), "Voter must exist.");

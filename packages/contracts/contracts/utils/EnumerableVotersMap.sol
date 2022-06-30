@@ -28,9 +28,8 @@ library EnumerableVotersMap {
 
     struct Voter {
         bool voted;
+        uint128 candidates;
         uint256 voterAndVote;
-        uint256 candidates;
-        uint256[10] __gap;
     }
 
     // Maps an Address to Voter

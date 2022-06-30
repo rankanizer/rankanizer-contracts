@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const Ballot = artifacts.require('Ballot');
+const Ballot = artifacts.require('SingleVoting');
 
 module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(Ballot, { from: accounts[0] });
@@ -22,4 +22,5 @@ module.exports = async function (deployer, network, accounts) {
   await ballot.vote(hash, [1], { from: accounts[2] });
   await ballot.vote(hash, [2], { from: accounts[3] });
   await ballot.vote(hash, [2], { from: accounts[4] });
+  await ballot.closePoll(hash, { from: accounts[0] });
 };

@@ -162,7 +162,7 @@ contract('SingleVoting', function (accounts) {
     });
 
     it('lots of votes', async function () {
-      const votes = Math.floor(generator() * 100) + 500;
+      const votes = Math.floor(generator() * 100) + 400;
       const candidates = 15;
 
       ballot = await SingleVoting.new();
@@ -173,7 +173,12 @@ contract('SingleVoting', function (accounts) {
       for (let i = 0; i < votes; i++) {
         const vote = Math.floor(generator() * candidates);
         const voter = Math.floor(generator() * accounts.length);
-        await ballot.vote(hash, vote, { from: accounts[voter] });
+        const voted = await ballot.didVote(hash, accounts[voter]);
+        if (voted) {
+          await ballot.changeVote(hash, vote, { from: accounts[voter] });
+        } else {
+          await ballot.vote(hash, vote, { from: accounts[voter] });
+        }
       }
 
       await ballot.closePoll(hash, { from: owner });
@@ -209,7 +214,7 @@ contract('SingleVoting', function (accounts) {
       const receipt = await ballot.createPoll(3, '', 5);
       const hash = receipt.receipt.logs[0].args.pollHash;
       await ballot.vote(hash, 1);
-      await ballot.vote(hash, 0);
+      await ballot.changeVote(hash, 0);
       expect(await ballot.votesOf(hash, 1)).to.be.bignumber.equal('0');
       expect(await ballot.votesOf(hash, 0)).to.be.bignumber.equal('1');
     });

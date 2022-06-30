@@ -200,7 +200,12 @@ contract('CondorcetVoting', function (accounts) {
           ranking[j] = Math.floor(generator() * candidates);
         }
         const voter = Math.floor(generator() * accounts.length);
-        await ballot.vote(hash, ranking, { from: accounts[voter] });
+        const voted = await ballot.didVote(hash, accounts[voter]);
+        if (voted) {
+          await ballot.changeVote(hash, ranking, { from: accounts[voter] });
+        } else {
+          await ballot.vote(hash, ranking, { from: accounts[voter] });
+        }
       }
 
       await ballot.closePoll(hash, { from: owner });
@@ -253,7 +258,7 @@ contract('CondorcetVoting', function (accounts) {
       let receipt = await ballot.createPoll(3, '', 5, { from: owner });
       const hash = receipt.receipt.logs[0].args.pollHash;
       await ballot.vote(hash, [2, 0, 1]);
-      await ballot.vote(hash, [1, 2, 0]);
+      await ballot.changeVote(hash, [1, 2, 0]);
 
       receipt = await ballot.closePoll(hash, { from: owner });
       assert.equal(receipt.receipt.logs[0].args.winners[0], '2');

@@ -40,7 +40,7 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
      *
      */
     function createPoll(
-        uint256 candidates,
+        uint32 candidates,
         string memory uri,
         uint256 newDuration
     ) public virtual returns (bytes32) {

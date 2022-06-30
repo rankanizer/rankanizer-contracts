@@ -19,8 +19,8 @@ contract CondorcetVoting is Ballot {
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
     // Optimizations for storage saving
-    uint256 constant _BITS_PER_CANDIDATE = 5;
-    uint256 constant _BITMASK = (2**_BITS_PER_CANDIDATE) - 1;
+    uint256 private constant _BITS_PER_CANDIDATE = 5;
+    uint256 private constant _BITMASK = (2**_BITS_PER_CANDIDATE) - 1;
 
     mapping(bytes32 => EnumerableVotersMap.Map) _voters;
 
@@ -43,7 +43,7 @@ contract CondorcetVoting is Ballot {
     function __CondorcetVoting_init_unchained() internal {}
 
     function createPoll(
-        uint256 candidates,
+        uint32 candidates,
         string memory uri,
         uint256 newDuration
     ) public virtual override returns (bytes32) {
@@ -76,22 +76,46 @@ contract CondorcetVoting is Ballot {
         rank = new uint256[](candidates);
         for (uint256 i = 0; i < candidates; i++) {
             rank[i] = encodedVote & _BITMASK;
-            encodedVote = encodedVote >> _BITS_PER_CANDIDATE;
+            encodedVote >>= _BITS_PER_CANDIDATE;
         }
     }
 
     /**
      * @dev Updates `_rank`with `votes` according to `add`: if true it adds votes, if false it subtracts votes.
      */
-    function _updateVotes(uint256[] memory votes, bool add) private {
+    function _updateVotes(uint256[] memory current, uint256[] memory previous) private {
+        unchecked {
+            for (uint256 i = 0; i < previous.length; i++) {
+                for (uint256 j = i + 1; j < previous.length; j++) {
+                    if (previous[i] < previous[j]) {
+                        _rank[i][j] -= 1;
+                    }
+                    if (previous[j] < previous[i]) {
+                        _rank[j][i] -= 1;
+                    }
+                    if (current[i] < current[j]) {
+                        _rank[i][j] += 1;
+                    }
+                    if (current[j] < current[i]) {
+                        _rank[j][i] += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @dev Updates `_rank`with `votes` according to `add`: if true it adds votes, if false it subtracts votes.
+     */
+    function _addVotes(uint256[] memory votes) private {
         unchecked {
             for (uint256 i = 0; i < votes.length; i++) {
-                for (uint256 j = 0; j < votes.length; j++) {
-                    if (j != i) {
-                        if (votes[i] < votes[j]) {
-                            if (add) _rank[i][j] += 1;
-                            else _rank[i][j] -= 1;
-                        }
+                for (uint256 j = i + 1; j < votes.length; j++) {
+                    if (votes[i] < votes[j]) {
+                        _rank[i][j] += 1;
+                    }
+                    if (votes[j] < votes[i]) {
+                        _rank[j][i] += 1;
                     }
                 }
             }
@@ -112,22 +136,48 @@ contract CondorcetVoting is Ballot {
     function vote(bytes32 pollHash, uint256[] memory userRanking) public didNotExpire(pollHash) {
         require(userRanking.length == _polls.get(pollHash).candidates, "Voting must be casted for all candidates.");
         uint256 size = userRanking.length;
+        uint256 candidates = _polls.getUnchecked(pollHash).candidates;
         for (uint256 i = 0; i < size; i++) {
-            require(userRanking[i] < _polls.get(pollHash).candidates, "Candidate doesn't exist.");
+            require(userRanking[i] < candidates, "Candidate doesn't exist.");
         }
 
         EnumerableVotersMap.Voter storage ranker = _voters[pollHash].getUnchecked(msg.sender);
+        require(!ranker.voted, "Voter already voted. Call changeVote instead.");
 
-        uint256[] memory previousRank;
-        if (ranker.voted) {
-            (, previousRank) = _decodeVote(ranker.candidates, ranker.voterAndVote);
-            _updateVotes(previousRank, false);
-        } else {
-            ranker.voted = true;
-            ranker.candidates = userRanking.length;
+        ranker.voted = true;
+        ranker.candidates = uint128(userRanking.length);
+    
+        _addVotes(userRanking);
+        ranker.voterAndVote = _encodeVote(msg.sender, userRanking);
+
+        EnumerableVotersMap.set(_voters[pollHash], msg.sender, ranker);
+    }
+
+    /**
+     * @dev Computes the votes ('userRanking') of a user. If a user had already voted, undo the previous vote.
+     *
+     * Requirements:
+     *
+     * - `userRanking` must have for every position, the preference of a user.
+     *    For instance, if a user ranking order is DBCA, the userRanking should be [3, 1, 2, 0]
+     *    if there's no preference between candidates you may repeat preferences: [2, 1, 2, 0]
+     * - Every candidate in `userRanking` should exist.
+     * - `userRanking` must have the same size as `_candidates`
+     */
+    function changeVote(bytes32 pollHash, uint256[] memory userRanking) public didNotExpire(pollHash) {
+        require(userRanking.length == _polls.get(pollHash).candidates, "Voting must be casted for all candidates.");
+        uint256 size = userRanking.length;
+        uint256 candidates = _polls.getUnchecked(pollHash).candidates;
+        for (uint256 i = 0; i < size; i++) {
+            require(userRanking[i] < candidates, "Candidate doesn't exist.");
         }
 
-        _updateVotes(userRanking, true);
+        EnumerableVotersMap.Voter storage ranker = _voters[pollHash].getUnchecked(msg.sender);
+        require(ranker.voted, "Voter didn't vote yet. Call vote instead.");
+
+        uint256[] memory previousRank;
+        (, previousRank) = _decodeVote(ranker.candidates, ranker.voterAndVote);
+        _updateVotes(userRanking, previousRank);
         ranker.voterAndVote = _encodeVote(msg.sender, userRanking);
 
         EnumerableVotersMap.set(_voters[pollHash], msg.sender, ranker);
