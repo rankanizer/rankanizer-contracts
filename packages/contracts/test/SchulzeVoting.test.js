@@ -150,7 +150,7 @@ contract('SchulzeVoting', function (accounts) {
       });
     });
 
-    describe.only('Deployment tests', () => { 
+    describe('Deployment tests', () => { 
       it('works before and after upgrading', async function () {
         const election = createElection('ABCD')([
           [5, 'ACBD'],
