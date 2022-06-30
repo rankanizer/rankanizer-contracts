@@ -5,7 +5,6 @@ pragma solidity ^0.8.3;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "./utils/EnumerableVotersMap.sol";
 import "./utils/EnumerablePollsMap.sol";
 import "./utils/QuickSort.sol";
 import "./Votable.sol";

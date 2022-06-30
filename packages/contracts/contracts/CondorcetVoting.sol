@@ -5,6 +5,7 @@ pragma solidity ^0.8.3;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./Ballot.sol";
+import "./utils/Vote.sol";
 
 /**
  * @dev Condorcet Voting System.
@@ -13,16 +14,12 @@ import "./Ballot.sol";
  */
 contract CondorcetVoting is Ballot {
     using AddressUpgradeable for address;
-    using EnumerableVotersMap for EnumerableVotersMap.Map;
-    using EnumerableVotersMap for EnumerableVotersMap.Voter;
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
+    using Vote for Vote.Encoded;
+    using Vote for Vote.Decoded;
 
-    // Optimizations for storage saving
-    uint256 private constant _BITS_PER_CANDIDATE = 5;
-    uint256 private constant _BITMASK = (2**_BITS_PER_CANDIDATE) - 1;
-
-    mapping(bytes32 => EnumerableVotersMap.Map) _voters;
+    mapping(bytes32 => mapping(address => Vote.Encoded)) private _voters;
 
     // Possible optimization: main diagonal is not used
     uint256[][] internal _rank;
@@ -57,27 +54,6 @@ contract CondorcetVoting is Ballot {
         }
 
         return pollHash;
-    }
-
-    function _encodeVote(address voter, uint256[] memory rank) internal pure returns (uint256 encodedVote) {
-        encodedVote = uint256(uint160(voter)) << 96;
-        uint256 size = rank.length;
-        for (uint256 i = 0; i < size; i++) {
-            encodedVote |= (rank[i] << (_BITS_PER_CANDIDATE * i));
-        }
-    }
-
-    function _decodeVote(uint256 candidates, uint256 encodedVote)
-        internal
-        pure
-        returns (address voter, uint256[] memory rank)
-    {
-        voter = address(uint160(encodedVote >> 96));
-        rank = new uint256[](candidates);
-        for (uint256 i = 0; i < candidates; i++) {
-            rank[i] = encodedVote & _BITMASK;
-            encodedVote >>= _BITS_PER_CANDIDATE;
-        }
     }
 
     /**
@@ -133,24 +109,25 @@ contract CondorcetVoting is Ballot {
      * - Every candidate in `userRanking` should exist.
      * - `userRanking` must have the same size as `_candidates`
      */
-    function vote(bytes32 pollHash, uint256[] memory userRanking) public didNotExpire(pollHash) {
-        require(userRanking.length == _polls.get(pollHash).candidates, "Voting must be casted for all candidates.");
-        uint256 size = userRanking.length;
+    function vote(bytes32 pollHash, uint256[] memory rank) public didNotExpire(pollHash) {
+        require(rank.length == _polls.get(pollHash).candidates, "Voting must be casted for all candidates.");
+        uint256 size = rank.length;
         uint256 candidates = _polls.getUnchecked(pollHash).candidates;
         for (uint256 i = 0; i < size; i++) {
-            require(userRanking[i] < candidates, "Candidate doesn't exist.");
+            require(rank[i] < candidates, "Candidate doesn't exist.");
         }
 
-        EnumerableVotersMap.Voter storage ranker = _voters[pollHash].getUnchecked(msg.sender);
-        require(!ranker.voted, "Voter already voted. Call changeVote instead.");
+        // Read and decode vote from storage
+        Vote.Decoded memory voter = _voters[pollHash][msg.sender].decode();
+        require(voter.voter == address(0), "Account already voted, use changeVote instead");
 
-        ranker.voted = true;
-        ranker.candidates = uint128(userRanking.length);
-    
-        _addVotes(userRanking);
-        ranker.voterAndVote = _encodeVote(msg.sender, userRanking);
+        _addVotes(rank);
 
-        EnumerableVotersMap.set(_voters[pollHash], msg.sender, ranker);
+        voter.voter = msg.sender;
+        voter.rank = rank;
+
+        // Encode and save vote
+        _voters[pollHash][msg.sender] = voter.encode();
     }
 
     /**
@@ -164,23 +141,24 @@ contract CondorcetVoting is Ballot {
      * - Every candidate in `userRanking` should exist.
      * - `userRanking` must have the same size as `_candidates`
      */
-    function changeVote(bytes32 pollHash, uint256[] memory userRanking) public didNotExpire(pollHash) {
-        require(userRanking.length == _polls.get(pollHash).candidates, "Voting must be casted for all candidates.");
-        uint256 size = userRanking.length;
+    function changeVote(bytes32 pollHash, uint256[] memory rank) public didNotExpire(pollHash) {
+        require(rank.length == _polls.get(pollHash).candidates, "Voting must be casted for all candidates.");
+        uint256 size = rank.length;
         uint256 candidates = _polls.getUnchecked(pollHash).candidates;
         for (uint256 i = 0; i < size; i++) {
-            require(userRanking[i] < candidates, "Candidate doesn't exist.");
+            require(rank[i] < candidates, "Candidate doesn't exist.");
         }
 
-        EnumerableVotersMap.Voter storage ranker = _voters[pollHash].getUnchecked(msg.sender);
-        require(ranker.voted, "Voter didn't vote yet. Call vote instead.");
+        // Read and decode vote from storage
+        Vote.Decoded memory voter = _voters[pollHash][msg.sender].decode();
+        require(voter.voter == msg.sender, "This account hasn't voted, use submitVote instead");
 
-        uint256[] memory previousRank;
-        (, previousRank) = _decodeVote(ranker.candidates, ranker.voterAndVote);
-        _updateVotes(userRanking, previousRank);
-        ranker.voterAndVote = _encodeVote(msg.sender, userRanking);
+        _updateVotes(rank, voter.rank);
 
-        EnumerableVotersMap.set(_voters[pollHash], msg.sender, ranker);
+        voter.rank = rank;
+
+        // Encode and save vote
+        _voters[pollHash][msg.sender] = voter.encode();
     }
 
     /**
@@ -234,17 +212,15 @@ contract CondorcetVoting is Ballot {
         external
         view
         pollMustExist(pollHash)
-        returns (uint256[] memory)
+        returns (Vote.Decoded memory)
     {
         require(
             msg.sender == _polls.get(pollHash).owner || msg.sender == voterAddress,
             "Only the creator or the voter may call this method."
         );
-        require(EnumerableVotersMap.contains(_voters[pollHash], voterAddress), "Voter must exist.");
-        uint256[] memory voterVotes;
-        EnumerableVotersMap.Voter memory voter = EnumerableVotersMap.get(_voters[pollHash], voterAddress);
-        (, voterVotes) = _decodeVote(voter.candidates, voter.voterAndVote);
-        return voterVotes;
+        require(_voters[pollHash][voterAddress].data != 0x0, "Voter must exist.");
+
+        return _voters[pollHash][voterAddress].decode();
     }
 
     /**
@@ -252,9 +228,8 @@ contract CondorcetVoting is Ballot {
      *
      */
     function didVote(bytes32 pollHash, address voter) external view override pollMustExist(pollHash) returns (bool) {
-        if (!EnumerableVotersMap.contains(_voters[pollHash], voter)) return false;
-        return EnumerableVotersMap.get(_voters[pollHash], voter).voted;
+        return _voters[pollHash][voter].data != 0x0;
     }
 
-    uint256[49] private __gap;
+    uint256[48] private __gap;
 }

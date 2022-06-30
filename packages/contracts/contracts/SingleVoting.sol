@@ -5,7 +5,6 @@ pragma solidity ^0.8.3;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "./utils/EnumerableSingleVotersMap.sol";
 import "./utils/EnumerablePollsMap.sol";
 import "./utils/QuickSort.sol";
 import "./Ballot.sol";
@@ -15,13 +14,15 @@ import "./Ballot.sol";
  */
 contract SingleVoting is Ballot {
     using AddressUpgradeable for address;
-    using EnumerableSingleVotersMap for EnumerableSingleVotersMap.Map;
-    using EnumerableSingleVotersMap for EnumerableSingleVotersMap.SingleVoter;
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
-    // Every voter of the poll
-    mapping(bytes32 => EnumerableSingleVotersMap.Map) _voters;
+    struct Voter {
+        bool voted;
+        uint128 vote;
+    }
+
+    mapping(bytes32 => mapping(address => Voter)) private _voters;
 
     function initialize() external virtual initializer {
         __SingleVoting_init();
@@ -57,8 +58,8 @@ contract SingleVoting is Ballot {
         uint256 candidates = poll.candidates;
         require(candidateIndex < candidates, "Candidate doesn't exist.");
 
-        EnumerableSingleVotersMap.SingleVoter storage voter = _voters[pollHash].getUnchecked(msg.sender);
-        require(!voter.voted, "Voter already voted. Call changeVote instead.");
+        Voter memory voter = _voters[pollHash][msg.sender];
+        require(!voter.voted, "Account already voted, use changeVote instead");
 
         voter.voted = true;
         voter.vote = candidateIndex;
@@ -67,7 +68,7 @@ contract SingleVoting is Ballot {
             poll.votes[candidateIndex]++;
         }
 
-        EnumerableSingleVotersMap.set(_voters[pollHash], msg.sender, voter);
+        _voters[pollHash][msg.sender] = voter;
     }
 
     /**
@@ -89,8 +90,9 @@ contract SingleVoting is Ballot {
         uint256 candidates = poll.candidates;
         require(candidateIndex < candidates, "Candidate doesn't exist.");
 
-        EnumerableSingleVotersMap.SingleVoter storage voter = _voters[pollHash].getUnchecked(msg.sender);
-        require(voter.voted, "Voter didn't vote yet. Call vote instead.");
+        // Read and decode vote from storage
+        Voter memory voter = _voters[pollHash][msg.sender];
+        require(voter.voted, "This account hasn't voted, use submitVote instead");
 
         unchecked {
             poll.votes[voter.vote]--;
@@ -98,7 +100,7 @@ contract SingleVoting is Ballot {
         }
 
         voter.vote = candidateIndex;
-        EnumerableSingleVotersMap.set(_voters[pollHash], msg.sender, voter);
+        _voters[pollHash][msg.sender] = voter;
     }
 
     /**
@@ -114,12 +116,10 @@ contract SingleVoting is Ballot {
             msg.sender == _polls.getUnchecked(pollHash).owner || msg.sender == voterAddress,
             "Only the creator or the voter may call this method."
         );
-        require(EnumerableSingleVotersMap.contains(_voters[pollHash], voterAddress), "Voter must exist.");
-        EnumerableSingleVotersMap.SingleVoter memory voter = EnumerableSingleVotersMap.get(
-            _voters[pollHash],
-            voterAddress
-        );
-        return voter.vote;
+
+        require(_voters[pollHash][voterAddress].voted, "Voter must exist.");
+
+        return _voters[pollHash][voterAddress].vote;
     }
 
     /**
@@ -127,8 +127,7 @@ contract SingleVoting is Ballot {
      *
      */
     function didVote(bytes32 pollHash, address voter) external view override pollMustExist(pollHash) returns (bool) {
-        if (!EnumerableSingleVotersMap.contains(_voters[pollHash], voter)) return false;
-        return EnumerableSingleVotersMap.get(_voters[pollHash], voter).voted;
+        return _voters[pollHash][voter].voted;
     }
 
     uint256[49] private __gap;

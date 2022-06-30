@@ -288,7 +288,7 @@ contract('CondorcetVoting', function (accounts) {
 
       receipt = await ballot.vote(hash, [2, 1, 0], { from: accountA });
       const votes = await ballot.voteOf(hash, accountA, { from: accountA });
-      assert.equal(votes[2], '0');
+      assert.equal(votes.rank[2], '0');
       // eslint-disable-next-line no-unused-expressions
       expect(await ballot.didVote(hash, accountA)).to.be.true;
       // eslint-disable-next-line no-unused-expressions

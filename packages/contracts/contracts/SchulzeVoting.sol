@@ -12,8 +12,6 @@ import "./CondorcetVoting.sol";
  *      between each pair of candidates.
  */
 contract SchulzeVoting is CondorcetVoting {
-    using EnumerableVotersMap for EnumerableVotersMap.Map;
-    using EnumerableVotersMap for EnumerableVotersMap.Voter;
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
 

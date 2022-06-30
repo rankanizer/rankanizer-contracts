@@ -3,8 +3,8 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 library Vote {
-    uint256 constant BITS_PER_CANDIDATE = 5;
-    uint256 constant BITMASK = (2**BITS_PER_CANDIDATE) - 1;
+    uint256 constant _BITS_PER_CANDIDATE = 5;
+    uint256 constant _BITMASK = (2**_BITS_PER_CANDIDATE) - 1;
 
     // Storage Layout:
     // Voter (160bit) | size (5bit) | votes (5~90bit)
@@ -17,7 +17,7 @@ library Vote {
         uint256[] rank;
     }
 
-    function encode(Decoded memory decoded) internal pure returns(Encoded memory encoded) {
+    function encode(Decoded memory decoded) internal pure returns (Encoded memory encoded) {
         unchecked {
             require(decoded.rank.length <= 18, "number of candidates exceed the limit");
             // Encode vote address
@@ -29,21 +29,21 @@ library Vote {
 
             // Encode votes
             for (uint256 i = 0; i < size; i++) {
-                encodedVote |= (decoded.rank[i] << (BITS_PER_CANDIDATE * i));
+                encodedVote |= (decoded.rank[i] << (_BITS_PER_CANDIDATE * i));
             }
             encoded.data = encodedVote;
         }
     }
 
-    function decode(Encoded memory encoded) internal pure returns(Decoded memory decoded) {
+    function decode(Encoded memory encoded) internal pure returns (Decoded memory decoded) {
         unchecked {
             uint256 encodedVote = encoded.data;
             decoded.voter = address(uint160(encodedVote >> 96));
-            uint256 size = (encodedVote >> 91) & BITMASK;
+            uint256 size = (encodedVote >> 91) & _BITMASK;
             decoded.rank = new uint256[](size);
             for (uint256 i = 0; i < size; i++) {
-                decoded.rank[i] = encodedVote & BITMASK;
-                encodedVote >>= BITS_PER_CANDIDATE;
+                decoded.rank[i] = encodedVote & _BITMASK;
+                encodedVote >>= _BITS_PER_CANDIDATE;
             }
         }
     }

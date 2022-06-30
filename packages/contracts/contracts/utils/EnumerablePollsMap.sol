@@ -29,7 +29,7 @@ library EnumerablePollsMap {
     struct Poll {
         // Poll closed
         bool finished;
-        // List of candidates
+        // Candidates Count
         uint32 candidates;
         // Poll Owner's address
         address owner;

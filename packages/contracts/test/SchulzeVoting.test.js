@@ -186,7 +186,12 @@ contract('SchulzeVoting', function (accounts) {
             ranking[j] = Math.floor(generator() * candidates);
           }
           const voter = Math.floor(generator() * accounts.length);
-          await schulze.vote(hash, ranking, { from: accounts[voter] });
+          const voted = await schulze.didVote(hash, accounts[voter]);
+          if (voted) {
+            await schulze.changeVote(hash, ranking, { from: accounts[voter] });
+          } else {
+            await schulze.vote(hash, ranking, { from: accounts[voter] });
+          }
         }
 
         await schulze.closePoll(hash, { from: owner });
