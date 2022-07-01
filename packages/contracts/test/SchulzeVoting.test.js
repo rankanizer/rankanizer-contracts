@@ -42,7 +42,7 @@ contract('SchulzeVoting', function (accounts) {
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < election.length; i++) {
-          await schulze.vote(hash, election[i], { from: accounts[i] });
+          await schulze.submitVote(hash, election[i], { from: accounts[i] });
         }
 
         receipt = await schulze.closePoll(hash, { from: owner });
@@ -70,7 +70,7 @@ contract('SchulzeVoting', function (accounts) {
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < election.length; i++) {
-          await schulze.vote(hash, election[i], { from: accounts[i] });
+          await schulze.submitVote(hash, election[i], { from: accounts[i] });
         }
 
         receipt = await schulze.closePoll(hash, { from: owner });
@@ -96,7 +96,7 @@ contract('SchulzeVoting', function (accounts) {
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < election.length; i++) {
-          await schulze.vote(hash, election[i], { from: accounts[i] });
+          await schulze.submitVote(hash, election[i], { from: accounts[i] });
         }
 
         receipt = await schulze.closePoll(hash, { from: owner });
@@ -122,7 +122,7 @@ contract('SchulzeVoting', function (accounts) {
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < election.length; i++) {
-          await schulze.vote(hash, election[i], { from: accounts[i] });
+          await schulze.submitVote(hash, election[i], { from: accounts[i] });
         }
 
         receipt = await schulze.closePoll(hash, { from: owner });
@@ -136,13 +136,13 @@ contract('SchulzeVoting', function (accounts) {
         const receipt = await schulze.createPoll(3, '', 7, { from: owner });
         const hash = receipt.receipt.logs[0].args.pollHash;
 
-        await schulze.vote(hash, [0, 1, 2], { from: accountA });
-        await schulze.vote(hash, [2, 0, 1], { from: accountB });
-        await schulze.vote(hash, [1, 0, 2], { from: accountC });
-        await schulze.vote(hash, [2, 0, 1], { from: accountD });
-        await schulze.vote(hash, [1, 0, 2], { from: accountE });
-        await schulze.vote(hash, [1, 2, 0], { from: accountF });
-        await schulze.vote(hash, [2, 0, 1], { from: accountG });
+        await schulze.submitVote(hash, [0, 1, 2], { from: accountA });
+        await schulze.submitVote(hash, [2, 0, 1], { from: accountB });
+        await schulze.submitVote(hash, [1, 0, 2], { from: accountC });
+        await schulze.submitVote(hash, [2, 0, 1], { from: accountD });
+        await schulze.submitVote(hash, [1, 0, 2], { from: accountE });
+        await schulze.submitVote(hash, [1, 2, 0], { from: accountF });
+        await schulze.submitVote(hash, [2, 0, 1], { from: accountG });
         await schulze.closePoll(hash, { from: owner });
 
         const winners = await schulze.winners(hash, { from: owner });
@@ -165,7 +165,7 @@ contract('SchulzeVoting', function (accounts) {
             ranking[j] = Math.floor(generator() * candidates);
           }
           const voter = i;
-          await schulze.vote(hash, ranking, { from: accounts[voter] });
+          await schulze.submitVote(hash, ranking, { from: accounts[voter] });
         }
 
         await schulze.closePoll(hash, { from: owner });
@@ -190,7 +190,7 @@ contract('SchulzeVoting', function (accounts) {
           if (voted) {
             await schulze.changeVote(hash, ranking, { from: accounts[voter] });
           } else {
-            await schulze.vote(hash, ranking, { from: accounts[voter] });
+            await schulze.submitVote(hash, ranking, { from: accounts[voter] });
           }
         }
 

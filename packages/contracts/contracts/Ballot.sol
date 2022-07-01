@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "./utils/EnumerablePollsMap.sol";
-import "./utils/QuickSort.sol";
 import "./Votable.sol";
 
 /**
@@ -17,7 +16,6 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
     using EnumerablePollsMap for EnumerablePollsMap.Map;
     using EnumerablePollsMap for EnumerablePollsMap.Poll;
 
-    // TODO Issue #6 - Refactoring the code
     mapping(bytes32 => uint256[]) _winners;
 
     mapping(address => bytes32[]) _pollsByOwner;
@@ -84,10 +82,10 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
     }
 
     /**
-     * @dev checks if poll is still open. If expired, close the poll afterwards.
+     * @dev checks if poll is still open.
      */
     modifier didNotExpire(bytes32 pollHash) {
-        require(_polls.get(pollHash).expire >= block.number, "This poll is closed. No more votes allowed");
+        require(!(block.number > _polls.get(pollHash).expire), "This poll is closed. No more votes allowed");
         _;
     }
 
@@ -95,7 +93,7 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * @dev checks if poll didn't expire.
      */
     modifier didExpire(bytes32 pollHash) {
-        require(_polls.get(pollHash).expire <= block.number, "This poll is not closed yet.");
+        require(_polls.get(pollHash).expire < block.number, "This poll is not closed yet.");
         _;
     }
 
@@ -128,23 +126,15 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
     function _calculateWinners(bytes32 pollHash, EnumerablePollsMap.Poll memory poll) internal virtual returns (bool) {
         if (_numberOfVotes(pollHash) == 0) return false;
 
-        uint256[] memory ref = new uint256[](poll.votes.length);
-        QuickSort.sortRef(poll.votes, ref);
-
-        uint256 winnerVotes = poll.votes[ref[0]];
-
-        // Temporary memory array to avoid the use of a storage variable
-        uint256[] memory temp = new uint256[](poll.candidates);
-        uint256 size = 0;
-
-        for (uint256 i = 0; i < ref.length; i++) {
-            if (poll.votes[ref[i]] == winnerVotes) {
-                temp[size++] = ref[i];
-            } else break;
+        uint256 winnerVotes = 0;
+        for (uint256 i = 0; i < poll.votes.length; i++) {
+            if (poll.votes[i] > winnerVotes) winnerVotes = poll.votes[i];
         }
 
-        for (uint256 i = 0; i < size; i++) {
-            _winners[pollHash].push(temp[i]);
+        for (uint256 i = 0; i < poll.votes.length; i++) {
+            if (poll.votes[i] == winnerVotes) {
+                _winners[pollHash].push(i);
+            }
         }
 
         return true;

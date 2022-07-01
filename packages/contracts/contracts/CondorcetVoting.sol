@@ -109,7 +109,7 @@ contract CondorcetVoting is Ballot {
      * - Every candidate in `userRanking` should exist.
      * - `userRanking` must have the same size as `_candidates`
      */
-    function vote(bytes32 pollHash, uint256[] memory rank) public didNotExpire(pollHash) {
+    function submitVote(bytes32 pollHash, uint256[] memory rank) public didNotExpire(pollHash) {
         require(rank.length == _polls.get(pollHash).candidates, "Voting must be casted for all candidates.");
         uint256 size = rank.length;
         uint256 candidates = _polls.getUnchecked(pollHash).candidates;

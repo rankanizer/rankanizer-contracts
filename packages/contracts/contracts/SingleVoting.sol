@@ -48,7 +48,7 @@ contract SingleVoting is Ballot {
      * - the voter must haven't vote yet.
      *
      */
-    function vote(bytes32 pollHash, uint128 candidateIndex)
+    function submitVote(bytes32 pollHash, uint128 candidateIndex)
         external
         virtual
         pollMustExist(pollHash)

@@ -112,26 +112,18 @@ contract SchulzeVoting is CondorcetVoting {
         uint256 n = ranks.length;
         uint256[] memory byRank = new uint256[](n);
 
-        // // Temporary memory array to avoid the use of a storage variable
-        uint256[] memory temp = new uint256[](_polls.get(pollHash).candidates);
-        uint256 size = 0;
-
         QuickSort.sortRef(ranks, byRank);
 
         uint256 place = 1;
-        temp[size++] = byRank[0];
+        _winners[pollHash].push(byRank[0]);
 
         for (uint256 i = 1; i < byRank.length; i++) {
             place++;
             if (ranks[byRank[i]] != ranks[byRank[i - 1]]) {
                 break;
             } else {
-                temp[size++] = byRank[i];
+                _winners[pollHash].push(byRank[i]);
             }
-        }
-
-        for (uint256 i = 0; i < size; i++) {
-            _winners[pollHash].push(temp[i]);
         }
 
         return _winners[pollHash];
