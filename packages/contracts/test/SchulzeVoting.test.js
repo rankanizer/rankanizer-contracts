@@ -151,10 +151,10 @@ contract('SchulzeVoting', function (accounts) {
     });
 
     describe('Deployment tests', () => {
-      let election
-      let accounts
-      let owner
-      let schulze
+      let election;
+      let accounts;
+      let owner;
+      let schulze;
 
       beforeEach(async () => {
         election = createElection('ABCD')([
@@ -191,13 +191,13 @@ contract('SchulzeVoting', function (accounts) {
 
         expect(receipt.status).to.be.eq(1);
       });
-      
-      it('works before and after upgrading', async function (){
+
+      it('works before and after upgrading', async function () {
         const SchulzeVotingV2 = await ethers.getContractFactory('SchulzeVotingDummy');
         const schulzeV2 = await upgrades.upgradeProxy(schulze.address, SchulzeVotingV2);
         await schulzeV2.deployed();
 
-        let transaction = await schulzeV2.dummy();
+        const transaction = await schulzeV2.dummy();
         expect(transaction).to.be.eq(true);
       });
     });
