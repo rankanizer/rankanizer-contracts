@@ -225,7 +225,7 @@ contract('SchulzeVoting', function (accounts) {
         const hash = receipt.logs[0].topics[1];
 
         for (let i = 0; i < election.length; i++) {
-          await schulze.connect(accounts[i]).vote(hash, election[i]);
+          await schulze.connect(accounts[i]).submitVote(hash, election[i]);
         }
 
         transaction = await schulze.connect(owner).closePoll(hash);
