@@ -214,10 +214,6 @@ contract CondorcetVoting is Ballot {
         pollMustExist(pollHash)
         returns (Vote.Decoded memory)
     {
-        require(
-            msg.sender == _polls.get(pollHash).owner || msg.sender == voterAddress,
-            "Only the creator or the voter may call this method."
-        );
         require(_voters[pollHash][voterAddress].data != 0x0, "Voter must exist.");
 
         return _voters[pollHash][voterAddress].decode();

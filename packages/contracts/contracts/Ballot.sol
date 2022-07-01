@@ -250,5 +250,5 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
         return _pollsByOwner[owner][index];
     }
 
-    uint256[47] private __gap;
+    uint256[45] private __gap;
 }

@@ -84,8 +84,6 @@ contract('CondorcetVoting', function (accounts) {
       await ballot.submitVote(hash, [0, 1, 2], { from: accountA });
       ballot.voteOf(hash, accountA, { from: accountA });
       ballot.voteOf(hash, accountA, { from: owner });
-      await expectRevert(
-        ballot.voteOf(hash, accountA, { from: accountB }), 'Only the creator or the voter may call this method.');
     });
 
     // Poll must exist tests

@@ -1,20 +1,20 @@
 {
   "manifestVersion": "3.2",
   "admin": {
-    "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
-    "txHash": "0xe2de6e62fc6e40c7a7b244154fe62f42144f3dd614ab02cbe1f206f6d8bac4e6"
+    "address": "0xCD8a1C3ba11CF5ECfa6267617243239504a98d90",
+    "txHash": "0x9472c1516a75619f2adbca73e64c190c6ce1bf4fb21ab61389bd80b6b9857de4"
   },
   "proxies": [
     {
-      "address": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
-      "txHash": "0x785e16aeafc01806e045537f695dd9b77b9066a84fef2f4c33c3e76fa60bca19",
+      "address": "0x82e01223d51Eb87e16A03E24687EDF0F294da6f1",
+      "txHash": "0x6f0c0ac14ef43137161df0e8dd2a4b5df4cfb60866fc42ba67eeac961a7652b8",
       "kind": "transparent"
     }
   ],
   "impls": {
-    "a5ced7f5c2b6675e14d195655b2023b1f69a6c6190f1357a0ae9345b65d7198f": {
-      "address": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
-      "txHash": "0xe784b10234e5682c7c91661eb3517dad443b91a2cd1875cb1eefe2ae0f548e07",
+    "8ffb44e09cc3f68fe06d39d737dcee40e909ee4acc6411017347d976e00929c6": {
+      "address": "0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575",
+      "txHash": "0x2eb9c083390db6c6059337a6ff5af64b68f63c122bb64351325e5dc535b1f682",
       "layout": {
         "storage": [
           {
@@ -78,7 +78,7 @@
             "label": "_polls",
             "offset": 0,
             "slot": "103",
-            "type": "t_struct(Map)3393_storage",
+            "type": "t_struct(Map)3376_storage",
             "contract": "Ballot",
             "src": "contracts/Ballot.sol:24"
           },
@@ -86,22 +86,22 @@
             "label": "__gap",
             "offset": 0,
             "slot": "106",
-            "type": "t_array(t_uint256)47_storage",
+            "type": "t_array(t_uint256)45_storage",
             "contract": "Ballot",
             "src": "contracts/Ballot.sol:253"
           },
           {
             "label": "_voters",
             "offset": 0,
-            "slot": "153",
-            "type": "t_mapping(t_bytes32,t_mapping(t_address,t_struct(Encoded)3794_storage))",
+            "slot": "151",
+            "type": "t_mapping(t_bytes32,t_mapping(t_address,t_struct(Encoded)3777_storage))",
             "contract": "CondorcetVoting",
             "src": "contracts/CondorcetVoting.sol:22"
           },
           {
             "label": "_rank",
             "offset": 0,
-            "slot": "154",
+            "slot": "152",
             "type": "t_array(t_array(t_uint256)dyn_storage)dyn_storage",
             "contract": "CondorcetVoting",
             "src": "contracts/CondorcetVoting.sol:25"
@@ -109,15 +109,15 @@
           {
             "label": "__gap",
             "offset": 0,
-            "slot": "155",
+            "slot": "153",
             "type": "t_array(t_uint256)48_storage",
             "contract": "CondorcetVoting",
-            "src": "contracts/CondorcetVoting.sol:234"
+            "src": "contracts/CondorcetVoting.sol:230"
           },
           {
             "label": "__gap",
             "offset": 0,
-            "slot": "203",
+            "slot": "201",
             "type": "t_array(t_uint256)50_storage",
             "contract": "SchulzeVoting",
             "src": "contracts/SchulzeVoting.sol:132"
@@ -136,9 +136,9 @@
             "label": "bytes32[]",
             "numberOfBytes": "32"
           },
-          "t_array(t_uint256)47_storage": {
-            "label": "uint256[47]",
-            "numberOfBytes": "1504"
+          "t_array(t_uint256)45_storage": {
+            "label": "uint256[45]",
+            "numberOfBytes": "1440"
           },
           "t_array(t_uint256)48_storage": {
             "label": "uint256[48]",
@@ -168,7 +168,7 @@
             "label": "mapping(address => bytes32[])",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_struct(Encoded)3794_storage)": {
+          "t_mapping(t_address,t_struct(Encoded)3777_storage)": {
             "label": "mapping(address => struct Vote.Encoded)",
             "numberOfBytes": "32"
           },
@@ -176,11 +176,11 @@
             "label": "mapping(bytes32 => uint256[])",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_bytes32,t_mapping(t_address,t_struct(Encoded)3794_storage))": {
+          "t_mapping(t_bytes32,t_mapping(t_address,t_struct(Encoded)3777_storage))": {
             "label": "mapping(bytes32 => mapping(address => struct Vote.Encoded))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_bytes32,t_struct(Poll)3384_storage)": {
+          "t_mapping(t_bytes32,t_struct(Poll)3367_storage)": {
             "label": "mapping(bytes32 => struct EnumerablePollsMap.Poll)",
             "numberOfBytes": "32"
           },
@@ -204,7 +204,7 @@
             ],
             "numberOfBytes": "64"
           },
-          "t_struct(Encoded)3794_storage": {
+          "t_struct(Encoded)3777_storage": {
             "label": "struct Vote.Encoded",
             "members": [
               {
@@ -216,7 +216,7 @@
             ],
             "numberOfBytes": "32"
           },
-          "t_struct(Map)3393_storage": {
+          "t_struct(Map)3376_storage": {
             "label": "struct EnumerablePollsMap.Map",
             "members": [
               {
@@ -227,14 +227,14 @@
               },
               {
                 "label": "_values",
-                "type": "t_mapping(t_bytes32,t_struct(Poll)3384_storage)",
+                "type": "t_mapping(t_bytes32,t_struct(Poll)3367_storage)",
                 "offset": 0,
                 "slot": "2"
               }
             ],
             "numberOfBytes": "96"
           },
-          "t_struct(Poll)3384_storage": {
+          "t_struct(Poll)3367_storage": {
             "label": "struct EnumerablePollsMap.Poll",
             "members": [
               {
