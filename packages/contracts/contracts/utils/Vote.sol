@@ -5,6 +5,7 @@ pragma solidity >=0.7.0 <0.9.0;
 library Vote {
     uint256 constant _BITS_PER_CANDIDATE = 5;
     uint256 constant _BITMASK = (2**_BITS_PER_CANDIDATE) - 1;
+    uint256 constant _MAX_CANDIDATES = 18;
 
     // Storage Layout:
     // Voter (160bit) | size (5bit) | votes (5~90bit)
@@ -19,7 +20,6 @@ library Vote {
 
     function encode(Decoded memory decoded) internal pure returns (Encoded memory encoded) {
         unchecked {
-            require(decoded.rank.length <= 18, "number of candidates exceed the limit");
             // Encode vote address
             uint256 encodedVote = uint256(uint160(decoded.voter)) << 96;
 

@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "./utils/EnumerablePollsMap.sol";
 import "./Votable.sol";
+import "./utils/Vote.sol";
 
 /**
  * @dev Traditional voting system
@@ -43,6 +44,7 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
     ) public virtual returns (bytes32) {
         require(candidates > 1, "The list of candidates should have at least two elements");
         require(newDuration > 0, "The duration of the poll must be greater than zero");
+        require(candidates <= Vote._MAX_CANDIDATES, "Number of candidates exceed the limit.");
 
         EnumerablePollsMap.Poll memory newPoll = EnumerablePollsMap.Poll({
             candidates: candidates,
@@ -85,15 +87,23 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * @dev checks if poll is still open.
      */
     modifier didNotExpire(bytes32 pollHash) {
-        require(!(block.number > _polls.get(pollHash).expire), "This poll is closed. No more votes allowed");
+        require(!(block.number > _polls.get(pollHash).expire), "This poll expired. No more votes allowed");
         _;
     }
 
     /**
-     * @dev checks if poll didn't expire.
+     * @dev checks if poll has finished.
      */
-    modifier didExpire(bytes32 pollHash) {
-        require(_polls.get(pollHash).expire < block.number, "This poll is not closed yet.");
+    modifier didNotFinish(bytes32 pollHash) {
+        require(!_polls.get(pollHash).finished, "This poll is already closed.");
+        _;
+    }
+
+    /**
+     * @dev checks if poll has finished.
+     */
+    modifier didFinish(bytes32 pollHash) {
+        require(_polls.get(pollHash).finished, "This poll is not closed yet.");
         _;
     }
 
@@ -195,7 +205,7 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
         view
         override
         pollMustExist(pollHash)
-        didExpire(pollHash)
+        didFinish(pollHash)
         returns (uint256[] memory)
     {
         return _winners[pollHash];
@@ -250,5 +260,5 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
         return _pollsByOwner[owner][index];
     }
 
-    uint256[45] private __gap;
+    uint256[46] private __gap;
 }

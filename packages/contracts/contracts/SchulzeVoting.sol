@@ -8,7 +8,7 @@ import "./CondorcetVoting.sol";
 
 /**
  * @dev Schulze Voting System.
- *      If there is no Condorce winner, it calculates a Schulze Winner by weighing other paths
+ *      If there is no Condorcet winner, it calculates a Schulze Winner by weighing other paths
  *      between each pair of candidates.
  */
 contract SchulzeVoting is CondorcetVoting {
@@ -30,24 +30,24 @@ contract SchulzeVoting is CondorcetVoting {
     /**
      * @dev It tries to find a Condorcet winner. If there isn't one, calculate Schulze winner(s)
      */
-    function _calculateWinners(bytes32 pollHash, EnumerablePollsMap.Poll memory poll)
+    function _calculateWinners(bytes32 hash, EnumerablePollsMap.Poll memory poll)
         internal
         virtual
         override
         returns (bool)
     {
-        if (!super._calculateWinners(pollHash, poll)) {
-            return _runSchulzeVoting(pollHash);
+        if (!super._calculateWinners(hash, poll)) {
+            return _runSchulzeVoting(hash);
         } else {
             return true;
         }
     }
 
     /**
-     * @dev Calculats Schulze winner(s) returning a ranked list: { place: 1, indexes: [1, 3] }
+     * @dev It calculates Schulze winner(s) returning a ranked list: { place: 1, indexes: [1, 3] }
      */
-    function _runSchulzeVoting(bytes32 pollHash) internal returns (bool) {
-        uint256 n = _rank.length;
+    function _runSchulzeVoting(bytes32 hash) internal returns (bool) {
+        uint256 n = _rankPerPoll[hash].length;
 
         // Paths Matrix
         uint256[][] memory path = new uint256[][](n);
@@ -61,8 +61,8 @@ contract SchulzeVoting is CondorcetVoting {
         for (uint256 i = 0; i < n; i++) {
             for (uint256 j = 0; j < n; j++) {
                 if (i != j) {
-                    if (_rank[i][j] > _rank[j][i]) {
-                        path[i][j] = _rank[i][j];
+                    if (_rankPerPoll[hash][i][j] > _rankPerPoll[hash][j][i]) {
+                        path[i][j] = _rankPerPoll[hash][i][j];
                     }
                 }
             }
@@ -91,7 +91,7 @@ contract SchulzeVoting is CondorcetVoting {
             }
         }
 
-        ranksToGroups(pollHash, wins);
+        ranksToGroups(hash, wins);
 
         return true;
     }
@@ -106,7 +106,7 @@ contract SchulzeVoting is CondorcetVoting {
      *  ]
      */
     function ranksToGroups(
-        bytes32 pollHash,
+        bytes32 hash,
         uint256[] memory ranks /** pure */
     ) public returns (uint256[] memory) {
         uint256 n = ranks.length;
@@ -115,18 +115,18 @@ contract SchulzeVoting is CondorcetVoting {
         QuickSort.sortRef(ranks, byRank);
 
         uint256 place = 1;
-        _winners[pollHash].push(byRank[0]);
+        _winners[hash].push(byRank[0]);
 
         for (uint256 i = 1; i < byRank.length; i++) {
             place++;
             if (ranks[byRank[i]] != ranks[byRank[i - 1]]) {
                 break;
             } else {
-                _winners[pollHash].push(byRank[i]);
+                _winners[hash].push(byRank[i]);
             }
         }
 
-        return _winners[pollHash];
+        return _winners[hash];
     }
 
     uint256[50] private __gap;

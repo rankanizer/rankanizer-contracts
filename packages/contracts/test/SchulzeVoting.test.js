@@ -1,9 +1,8 @@
 const { assert } = require('chai');
 const { ethers, upgrades } = require('hardhat');
+const seedrandom = require('seedrandom');
 
 const SchulzeVoting = artifacts.require('SchulzeVoting');
-const seedrandom = require('seedrandom');
-const generator = seedrandom('rankanizer');
 
 contract('SchulzeVoting', function (accounts) {
   const [ owner,
@@ -27,6 +26,7 @@ contract('SchulzeVoting', function (accounts) {
 
   describe('the schulze method', () => {
     let schulze;
+    const generator = seedrandom('rankanizer');
 
     describe('Electowiki examples', () => {
       it('Several draws, two winners', async function () {
@@ -149,6 +149,37 @@ contract('SchulzeVoting', function (accounts) {
         const winners = await schulze.winners(hash, { from: owner });
         assert.equal(winners.length, '1');
         assert.equal(winners[0], '1');
+      });
+
+      it('Simultaneous polls', async function () {
+        schulze = await SchulzeVoting.new();
+        await schulze.initialize({ from: owner });
+        let receipt = await schulze.createPoll(3, '', 20, { from: owner });
+        const hash = receipt.receipt.logs[0].args.pollHash;
+        receipt = await schulze.createPoll(3, '', 20, { from: accountA });
+        const hash2 = receipt.receipt.logs[0].args.pollHash;
+
+        await schulze.submitVote(hash, [0, 1, 2], { from: accountA });
+        await schulze.submitVote(hash2, [0, 1, 2], { from: accountA });
+        await schulze.submitVote(hash, [2, 0, 1], { from: accountB });
+        await schulze.submitVote(hash2, [0, 1, 2], { from: accountB });
+        await schulze.submitVote(hash, [1, 0, 2], { from: accountC });
+        await schulze.submitVote(hash2, [0, 1, 2], { from: accountC });
+        await schulze.submitVote(hash, [2, 0, 1], { from: accountD });
+        await schulze.submitVote(hash2, [0, 1, 2], { from: accountD });
+        await schulze.submitVote(hash, [1, 0, 2], { from: accountE });
+        await schulze.submitVote(hash2, [0, 1, 2], { from: accountE });
+        await schulze.submitVote(hash, [1, 2, 0], { from: accountF });
+        await schulze.submitVote(hash2, [0, 1, 2], { from: accountF });
+        await schulze.submitVote(hash, [2, 0, 1], { from: accountG });
+        await schulze.submitVote(hash2, [0, 1, 2], { from: accountG });
+        receipt = await schulze.closePoll(hash, { from: owner });
+
+        const winners = await schulze.winners(hash, { from: owner });
+        assert.equal(winners.length, '1');
+        assert.equal(winners[0], '1');
+
+        await schulze.closePoll(hash2, { from: accountA });
       });
 
       it('one vote per account', async function () {

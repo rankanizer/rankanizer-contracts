@@ -48,18 +48,19 @@ contract SingleVoting is Ballot {
      * - the voter must haven't vote yet.
      *
      */
-    function submitVote(bytes32 pollHash, uint128 candidateIndex)
+    function submitVote(bytes32 hash, uint128 candidateIndex)
         external
         virtual
-        pollMustExist(pollHash)
-        didNotExpire(pollHash)
+        pollMustExist(hash)
+        didNotExpire(hash)
+        didNotFinish(hash)
     {
-        EnumerablePollsMap.Poll storage poll = _polls.get(pollHash);
+        EnumerablePollsMap.Poll storage poll = _polls.get(hash);
         uint256 candidates = poll.candidates;
         require(candidateIndex < candidates, "Candidate doesn't exist.");
 
-        Voter memory voter = _voters[pollHash][msg.sender];
-        require(!voter.voted, "Account already voted, use changeVote instead");
+        Voter memory voter = _voters[hash][msg.sender];
+        require(!voter.voted, "Account already voted, use changeVote instead.");
 
         voter.voted = true;
         voter.vote = candidateIndex;
@@ -68,7 +69,7 @@ contract SingleVoting is Ballot {
             poll.votes[candidateIndex]++;
         }
 
-        _voters[pollHash][msg.sender] = voter;
+        _voters[hash][msg.sender] = voter;
     }
 
     /**
@@ -80,19 +81,20 @@ contract SingleVoting is Ballot {
      * - the voter must have voted before.
      *
      */
-    function changeVote(bytes32 pollHash, uint128 candidateIndex)
+    function changeVote(bytes32 hash, uint128 candidateIndex)
         external
         virtual
-        pollMustExist(pollHash)
-        didNotExpire(pollHash)
+        pollMustExist(hash)
+        didNotExpire(hash)
+        didNotFinish(hash)
     {
-        EnumerablePollsMap.Poll storage poll = _polls.get(pollHash);
+        EnumerablePollsMap.Poll storage poll = _polls.get(hash);
         uint256 candidates = poll.candidates;
         require(candidateIndex < candidates, "Candidate doesn't exist.");
 
         // Read and decode vote from storage
-        Voter memory voter = _voters[pollHash][msg.sender];
-        require(voter.voted, "This account hasn't voted, use submitVote instead");
+        Voter memory voter = _voters[hash][msg.sender];
+        require(voter.voted, "This account hasn't voted, use submitVote instead.");
 
         unchecked {
             poll.votes[voter.vote]--;
@@ -100,7 +102,7 @@ contract SingleVoting is Ballot {
         }
 
         voter.vote = candidateIndex;
-        _voters[pollHash][msg.sender] = voter;
+        _voters[hash][msg.sender] = voter;
     }
 
     /**
@@ -111,23 +113,23 @@ contract SingleVoting is Ballot {
      * - `voter` must have voted
      * - `voter` must exist
      */
-    function voteOf(bytes32 pollHash, address voterAddress) external view pollMustExist(pollHash) returns (uint256) {
+    function voteOf(bytes32 hash, address voterAddress) external view pollMustExist(hash) returns (uint256) {
         require(
-            msg.sender == _polls.getUnchecked(pollHash).owner || msg.sender == voterAddress,
+            msg.sender == _polls.getUnchecked(hash).owner || msg.sender == voterAddress,
             "Only the creator or the voter may call this method."
         );
 
-        require(_voters[pollHash][voterAddress].voted, "Voter must exist.");
+        require(_voters[hash][voterAddress].voted, "Voter must exist.");
 
-        return _voters[pollHash][voterAddress].vote;
+        return _voters[hash][voterAddress].vote;
     }
 
     /**
      * @dev Returns if `voter` has voted
      *
      */
-    function didVote(bytes32 pollHash, address voter) external view override pollMustExist(pollHash) returns (bool) {
-        return _voters[pollHash][voter].voted;
+    function didVote(bytes32 hash, address voter) external view override pollMustExist(hash) returns (bool) {
+        return _voters[hash][voter].voted;
     }
 
     uint256[49] private __gap;
