@@ -198,7 +198,9 @@ contract('SchulzeVoting', function (accounts) {
         await schulzeV2.deployed();
 
         const transaction = await schulzeV2.dummy();
-        expect(transaction).to.be.eq(true);
+        const bigNumber = parseInt(transaction._hex)
+
+        expect(bigNumber).to.be.eq(0xdeadbeef);
       });
     });
   });
