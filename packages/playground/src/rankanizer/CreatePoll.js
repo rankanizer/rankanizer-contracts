@@ -38,7 +38,7 @@ const CreatePoll = (props) => {
           <div className="new-poll__control">
             <label>Candidates</label>
             <input type="number" required min="2" step="1"
-              value={enteredCandidates} onChange={candidatesChangeHandler}/>
+              value={enteredCandidates} max="18" onChange={candidatesChangeHandler}/>
           </div>
           <div className="new-poll__control">
             <label>Duration</label>
