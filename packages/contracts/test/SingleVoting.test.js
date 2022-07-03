@@ -434,7 +434,8 @@ contract('SingleVoting', function (accounts) {
       receipt = await ballot.closePoll(hash, { from: owner });
       assert.equal(receipt.receipt.logs[0].args.winners[0], '2');
 
-      await ballot.closePoll(hash2, { from: accountA });
+      receipt = await ballot.closePoll(hash2, { from: accountA });
+      assert.equal(receipt.receipt.logs[0].args.winners[0], '0');
     });
 
     it('already closed', async function () {

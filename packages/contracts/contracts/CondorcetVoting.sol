@@ -22,7 +22,7 @@ contract CondorcetVoting is Ballot {
     mapping(bytes32 => mapping(address => Vote.Encoded)) private _voters;
 
     // A place to calculate intermediary results
-    mapping(bytes32 => uint256[][]) internal _rankPerPoll;
+    mapping(bytes32 => uint32[][]) internal _rankPerPoll;
 
     function initialize() external virtual initializer {
         __CondorcetVoting_init();
@@ -46,11 +46,9 @@ contract CondorcetVoting is Ballot {
     ) public virtual override returns (bytes32) {
         bytes32 hash = super.createPoll(candidates, uri, newDuration);
 
-        uint256 n = _polls.get(hash).candidates;
-
-        _rankPerPoll[hash] = new uint256[][](n);
-        for (uint256 i = 0; i < n; i++) {
-            _rankPerPoll[hash][i] = new uint256[](n);
+        _rankPerPoll[hash] = new uint32[][](candidates);
+        for (uint256 i = 0; i < candidates; i++) {
+            _rankPerPoll[hash][i] = new uint32[](candidates);
         }
 
         return hash;

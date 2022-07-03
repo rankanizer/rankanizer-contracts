@@ -175,11 +175,14 @@ contract('SchulzeVoting', function (accounts) {
         await schulze.submitVote(hash2, [0, 1, 2], { from: accountG });
         receipt = await schulze.closePoll(hash, { from: owner });
 
-        const winners = await schulze.winners(hash, { from: owner });
+        let winners = await schulze.winners(hash, { from: owner });
         assert.equal(winners.length, '1');
         assert.equal(winners[0], '1');
 
         await schulze.closePoll(hash2, { from: accountA });
+        winners = await schulze.winners(hash2, { from: owner });
+        assert.equal(winners.length, '1');
+        assert.equal(winners[0], '0');
       });
 
       it('one vote per account', async function () {
