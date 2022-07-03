@@ -27,16 +27,16 @@ library EnumerablePollsMap {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.Bytes32Set;
 
     struct Poll {
+        // Poll closed
+        bool finished;
+        // Candidates Count
+        uint32 candidates;
         // Poll Owner's address
         address owner;
-        // List of candidates
-        uint256 candidates;
         // Candidates uri
         string uri;
         // Expiration block
         uint256 expire;
-        // Poll closed
-        bool finished;
         // Votes for each candidate
         uint256[] votes;
     }

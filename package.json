@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npm run test --workspaces",
     "start": "npm run start --workspace @rankanizer-contracts/playground",
-    "migrate": "truffle migrate --reset --workspace @rankanizer-contracts/contracts",
+    "migrate": "truffle migrate --reset --config ./packages/contracts/truffle-config.js --workspace @rankanizer-contracts/contracts",
     "start-playground": "scripts/start-playground.sh"
   },
   "author": "",
@@ -18,5 +18,8 @@
   "devDependencies": {
     "ganache-cli": "^6.12.2",
     "truffle": "^5.5.19"
+  },
+  "dependencies": {
+    "seedrandom": "^3.0.5"
   }
 }

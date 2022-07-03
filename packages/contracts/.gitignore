@@ -59,4 +59,4 @@ cache
 artifacts
 
 # UML documentation
-contracts.svg
+*.svg
