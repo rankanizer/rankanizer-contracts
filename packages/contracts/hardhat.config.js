@@ -65,7 +65,11 @@ module.exports = {
       url: 'http://127.0.0.1:8545',
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: !withOptimizations,
-      accounts: ['0xaac926478705200127181dfd7640fd2b698c383430efa0e77ef95e76e4d2a64b'],
+      accounts: {
+        mnemonic: 'true hunt echo pink drama come work kiwi essay erupt joke stomach',
+        initialIndex: 0,
+        count: 10 
+      },
     },
   },
   gasReporter: {
