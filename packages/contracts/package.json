@@ -1,6 +1,6 @@
 {
   "name": "@rankanizer-contracts/contracts",
-  "description": "A smart contract that allows the Ethereum address associated with a DOT allocation to claim that allocation to a specified Polkadot address.",
+  "description": "Contracts for Rankanizer",
   "version": "1.0.0",
   "scripts": {
     "compile": "hardhat compile",
@@ -14,7 +14,9 @@
     "test": "hardhat test",
     "test:inheritance": "node scripts/inheritanceOrdering artifacts/build-info/*",
     "gas-report": "env ENABLE_GAS_REPORT=true npm run test",
-    "remixd": "remixd -s `pwd`/contracts --remix-ide https://remix.ethereum.org"
+    "remixd": "remixd -s `pwd`/contracts --remix-ide https://remix.ethereum.org",
+    "migrate": "truffle migrate --reset",
+    "start-ganache": "ganache-cli -m 'inhale path antenna catalog all uncover rebel orbit cupboard liquid more fit'"
   },
   "repository": {
     "type": "git",
@@ -50,6 +52,7 @@
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
+    "ganache-cli": "^6.12.2",
     "graphlib": "^2.1.8",
     "hardhat": "^2.0.6",
     "hardhat-gas-reporter": "^1.0.4",
@@ -57,6 +60,7 @@
     "prettier": "^2.3.0",
     "prettier-plugin-solidity": "^1.0.0-beta.16",
     "rimraf": "^3.0.2",
+    "seedrandom": "^3.0.5",
     "solhint": "^3.3.6",
     "solidity-ast": "^0.4.28",
     "solidity-coverage": "^0.7.11",
