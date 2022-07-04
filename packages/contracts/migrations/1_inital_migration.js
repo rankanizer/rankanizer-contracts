@@ -4,11 +4,6 @@ const Ballot = artifacts.require('SingleVoting');
 module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(Ballot, { from: accounts[0] });
   const ballot = await Ballot.deployed();
-  fs = require('fs');
-  fs.writeFile('../playground/.env', 'REACT_APP_BALLOT_ADDRESS=' + ballot.address, function (err) {
-    if (err) return console.log(err);
-    console.log('.env file created');
-  });
 
   await ballot.initialize({ from: accounts[0] });
 

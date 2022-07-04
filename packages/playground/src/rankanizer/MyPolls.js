@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import PollsItem from './PollsItem';
+import MyPollsItem from './MyPollsItem';
 import './rankanizer.css';
 
 function MyPolls (props) {
@@ -13,8 +13,17 @@ function MyPolls (props) {
       for (let i = 0; i < size; i++) {
         const hash = await props.ballot.methods.ownerPollByIndex(props.account, i).call();
         const poll = await props.ballot.methods.pollByHash(hash).call();
+        const winners = [];
+        if (poll.finished) {
+          const temp = await props.ballot.methods.winners(hash).call();
+          for (let i = 0; i < temp.length; i++) {
+            winners[i] = parseInt(temp[i]) + 1;
+          }
+        }
+
         const data = {
           ...poll,
+          winners: winners,
           hash: hash,
           index: i + 1,
         };
@@ -29,12 +38,16 @@ function MyPolls (props) {
   return (
     <ul className="polls-list">
       {polls.map((poll) => (
-        <PollsItem
+        <MyPollsItem
           candidates={poll.candidates}
           uri={poll.uri}
           expire={poll.expire}
           finished={poll.finished}
           index={poll.index}
+          ballot={props.ballot}
+          account={props.account}
+          hash={poll.hash}
+          winners={poll.winners}
           key={poll.hash}
         />
       ))}
