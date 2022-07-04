@@ -22,7 +22,11 @@ To automatically fix trivial lint issues
 ### In your local machine using Ganache
 
 In any folder run `npm install -g ganache-cli`
+
 `npx ganache-cli -m 'true hunt echo pink drama come work kiwi essay erupt joke stomach' --secure` Do not use this mneminic in Main Network
+
 **Keep it running** and in another terminal session:
-Inside project's main folde: `cd packages/contracts`
-`npm run deploy --network ganache`
+
+Inside project's main folder:
+
+`npm run deploy --network ganache --workspace @rankanizer-contracts/contracts`
