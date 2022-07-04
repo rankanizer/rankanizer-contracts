@@ -61,6 +61,16 @@ module.exports = {
         count: 151,
       },
     },
+    ganache: {
+      url: 'http://127.0.0.1:8545',
+      blockGasLimit: 10000000,
+      allowUnlimitedContractSize: !withOptimizations,
+      accounts: {
+        mnemonic: 'true hunt echo pink drama come work kiwi essay erupt joke stomach',
+        initialIndex: 0,
+        count: 10,
+      },
+    },
   },
   gasReporter: {
     currency: 'USD',
