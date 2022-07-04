@@ -281,7 +281,7 @@ contract('SchulzeVoting', function (accounts) {
         await schulzeV2.deployed();
 
         const transaction = await schulzeV2.dummy();
-        const bigNumber = parseInt(transaction._hex)
+        const bigNumber = parseInt(transaction._hex);
 
         expect(bigNumber).to.be.eq(0xdeadbeef);
       });

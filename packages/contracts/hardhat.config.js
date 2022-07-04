@@ -68,7 +68,7 @@ module.exports = {
       accounts: {
         mnemonic: 'true hunt echo pink drama come work kiwi essay erupt joke stomach',
         initialIndex: 0,
-        count: 10 
+        count: 10,
       },
     },
   },

@@ -11,11 +11,11 @@ Every test must pass
 
 ## Lint
 
-    `npm run lint`
+    `npm run lint --workspace @rankanizer-contracts/contracts`
 
 To automatically fix trivial lint issues
 
-    `npm run lint:fix`
+    `npm run lint:fix --workspace @rankanizer-contracts/contracts`
 
 
 ## Deploy

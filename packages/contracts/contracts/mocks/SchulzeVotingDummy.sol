@@ -5,7 +5,7 @@ pragma solidity ^0.8.3;
 import "../SchulzeVoting.sol";
 
 contract SchulzeVotingDummy is SchulzeVoting {
-    function dummy() public pure returns (uint) {
+    function dummy() public pure returns (uint256) {
         return 0xdeadbeef;
     }
 
