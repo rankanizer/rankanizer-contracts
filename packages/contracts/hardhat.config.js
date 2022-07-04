@@ -58,7 +58,7 @@ module.exports = {
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: !withOptimizations,
       accounts: {
-        count: 51,
+        count: 151,
       },
     },
     ganache: {
