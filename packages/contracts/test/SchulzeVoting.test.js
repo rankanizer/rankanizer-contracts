@@ -234,8 +234,13 @@ contract('SchulzeVoting', function (accounts) {
     });
 
     describe('Deployment tests', () => {
-      it('works before and after upgrading', async function () {
-        const election = createElection('ABCD')([
+      let election;
+      let accounts;
+      let owner;
+      let schulze;
+
+      beforeEach(async () => {
+        election = createElection('ABCD')([
           [5, 'ACBD'],
           [2, 'ACDB'],
           [3, 'ADCB'],
@@ -246,13 +251,15 @@ contract('SchulzeVoting', function (accounts) {
           [5, 'DBAC'],
           [4, 'DCBA'],
         ]);
-        const accounts = await ethers.getSigners();
-        const [owner] = accounts;
+        accounts = await ethers.getSigners();
+        [owner] = accounts;
 
         const SchulzeVoting = await ethers.getContractFactory('SchulzeVoting');
-        const schulze = await upgrades.deployProxy(SchulzeVoting);
+        schulze = await upgrades.deployProxy(SchulzeVoting);
         await schulze.deployed();
+      });
 
+      it('deploys upgradable contract', async function () {
         let transaction = await schulze.connect(owner).createPoll(4, '', 100);
         let receipt = await transaction.wait();
 
@@ -266,6 +273,17 @@ contract('SchulzeVoting', function (accounts) {
         receipt = await transaction.wait();
 
         expect(receipt.status).to.be.eq(1);
+      });
+
+      it('works before and after upgrading', async function () {
+        const SchulzeVotingV2 = await ethers.getContractFactory('SchulzeVotingDummy');
+        const schulzeV2 = await upgrades.upgradeProxy(schulze.address, SchulzeVotingV2);
+        await schulzeV2.deployed();
+
+        const transaction = await schulzeV2.dummy();
+        const bigNumber = parseInt(transaction._hex);
+
+        expect(bigNumber).to.be.eq(0xdeadbeef);
       });
     });
   });
