@@ -27,7 +27,8 @@ const MyPollsItem = (props) => {
           { !finished && <div className="new-poll__actions">
             <button type="button" onClick={closeHandler}>Close</button>
           </div>}
-          { winners.toString() && <div className="poll-item__number">{winners}</div> }
+          { winners.length > 0 &&
+            <div className="poll-item__number">{winners.map(winner => parseInt(winner) + 1).join(', ')}</div> }
         </div>
       </div>
     </li>

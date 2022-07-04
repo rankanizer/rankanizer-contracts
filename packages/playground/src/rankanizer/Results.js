@@ -13,11 +13,8 @@ function Results (props) {
       for (let i = 0; i < size; i++) {
         const result = await props.ballot.methods.pollByIndex(i).call();
         if (result[1].finished) {
-          const winners = [];
           const aux = await props.ballot.methods.winners(result[0]).call();
-          for (let i = 0; i < aux.length; i++) {
-            winners[i] = parseInt(aux[i]) + 1;
-          }
+          const winners = aux.map(winner => parseInt(winner) + 1);
           const data = {
             ...result[1],
             hash: result[0],
