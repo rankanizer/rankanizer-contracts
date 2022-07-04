@@ -27,6 +27,6 @@ In any folder run `npm install -g ganache-cli`
 
 **Keep it running** and in another terminal session:
 
-Inside project's main folder: `cd packages/contracts`
+Inside project's main folder:
 
-`npm run deploy --network ganache`
+`npm run deploy --network ganache --workspace @rankanizer-contracts/contracts`
