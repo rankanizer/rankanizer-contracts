@@ -66,7 +66,8 @@ function App () {
       {ready &&
         <MainPage
           ballot = { ballot }
-          account = { account } />
+          account = { account }
+          block = { block }/>
       }
       <div className='footnote'><b>Account:</b><i>{ account }</i> - <b>Block:</b><i>{block}</i></div>
     </div>

@@ -55,8 +55,8 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
             uri: uri
         });
 
-        // EnumerablePollsMap.Poll memory poll = _polls.get(0x0);
         bytes32 pollHash = newPoll.hash();
+        require(!_polls.contains(pollHash), "Can't create poll, it already exists.");
 
         _polls.set(pollHash, newPoll);
 
@@ -86,6 +86,14 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
     /**
      * @dev checks if poll is still open.
      */
+    modifier didExpire(bytes32 pollHash) {
+        require(block.number > _polls.get(pollHash).expire, "This poll hasn't expired yet.");
+        _;
+    }
+
+    /**
+     * @dev checks if poll is still open.
+     */
     modifier didNotExpire(bytes32 pollHash) {
         require(!(block.number > _polls.get(pollHash).expire), "This poll expired. No more votes allowed");
         _;
@@ -95,7 +103,7 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
      * @dev checks if poll has finished.
      */
     modifier didNotFinish(bytes32 pollHash) {
-        require(!_polls.get(pollHash).finished, "This poll is already closed.");
+        require(!_polls.get(pollHash).finished, "This poll is closed already");
         _;
     }
 
@@ -112,7 +120,15 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
      *
      * Emits a {PollClosed} event.
      */
-    function closePoll(bytes32 pollHash) external virtual override pollMustExist(pollHash) pollOwnerOnly(pollHash) {
+    function closePoll(bytes32 pollHash)
+        external
+        virtual
+        override
+        pollMustExist(pollHash)
+        pollOwnerOnly(pollHash)
+        didExpire(pollHash)
+        didNotFinish(pollHash)
+    {
         _closePoll(pollHash);
     }
 
@@ -123,7 +139,6 @@ abstract contract Ballot is Votable, Initializable, OwnableUpgradeable {
      */
     function _closePoll(bytes32 pollHash) internal {
         EnumerablePollsMap.Poll storage poll = _polls.get(pollHash);
-        require(!poll.finished, "This poll is closed already");
         poll.finished = true;
         _calculateWinners(pollHash, poll);
         emit PollClosed(pollHash, _winners[pollHash]);

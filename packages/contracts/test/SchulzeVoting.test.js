@@ -39,7 +39,7 @@ contract('SchulzeVoting', function (accounts) {
 
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        let receipt = await schulze.createPoll(4, '', 100, { from: owner });
+        let receipt = await schulze.createPoll(4, '', election.length, { from: owner });
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < election.length; i++) {
@@ -67,7 +67,7 @@ contract('SchulzeVoting', function (accounts) {
 
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        let receipt = await schulze.createPoll(4, '', 100, { from: owner });
+        let receipt = await schulze.createPoll(4, '', election.length, { from: owner });
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < election.length; i++) {
@@ -93,7 +93,7 @@ contract('SchulzeVoting', function (accounts) {
         ]);
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        let receipt = await schulze.createPoll(5, '', 100, { from: owner });
+        let receipt = await schulze.createPoll(5, '', election.length, { from: owner });
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < election.length; i++) {
@@ -119,7 +119,7 @@ contract('SchulzeVoting', function (accounts) {
 
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        let receipt = await schulze.createPoll(5, '', 100, { from: owner });
+        let receipt = await schulze.createPoll(5, '', election.length, { from: owner });
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < election.length; i++) {
@@ -154,9 +154,9 @@ contract('SchulzeVoting', function (accounts) {
       it('Simultaneous polls', async function () {
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        let receipt = await schulze.createPoll(3, '', 20, { from: owner });
+        let receipt = await schulze.createPoll(3, '', 15, { from: owner });
         const hash = receipt.receipt.logs[0].args.pollHash;
-        receipt = await schulze.createPoll(3, '', 20, { from: accountA });
+        receipt = await schulze.createPoll(3, '', 15, { from: accountA });
         const hash2 = receipt.receipt.logs[0].args.pollHash;
 
         await schulze.submitVote(hash, [0, 1, 2], { from: accountA });
@@ -191,7 +191,7 @@ contract('SchulzeVoting', function (accounts) {
 
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        const receipt = await schulze.createPoll(candidates, '', votes + 1, { from: owner });
+        const receipt = await schulze.createPoll(candidates, '', votes, { from: owner });
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < votes; i++) {
@@ -212,7 +212,7 @@ contract('SchulzeVoting', function (accounts) {
 
         schulze = await SchulzeVoting.new();
         await schulze.initialize({ from: owner });
-        const receipt = await schulze.createPoll(candidates, '', votes + 1, { from: owner });
+        const receipt = await schulze.createPoll(candidates, '', votes, { from: owner });
         const hash = receipt.receipt.logs[0].args.pollHash;
 
         for (let i = 0; i < votes; i++) {
@@ -260,7 +260,7 @@ contract('SchulzeVoting', function (accounts) {
       });
 
       it('deploys upgradable contract', async function () {
-        let transaction = await schulze.connect(owner).createPoll(4, '', 100);
+        let transaction = await schulze.connect(owner).createPoll(4, '', election.length);
         let receipt = await transaction.wait();
 
         const hash = receipt.logs[0].topics[1];

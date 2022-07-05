@@ -13,12 +13,10 @@ function MyPolls (props) {
       for (let i = 0; i < size; i++) {
         const hash = await props.ballot.methods.ownerPollByIndex(props.account, i).call();
         const poll = await props.ballot.methods.pollByHash(hash).call();
-        const winners = [];
+        let winners = [];
         if (poll.finished) {
-          const temp = await props.ballot.methods.winners(hash).call();
-          for (let i = 0; i < temp.length; i++) {
-            winners[i] = parseInt(temp[i]) + 1;
-          }
+          const aux = await props.ballot.methods.winners(hash).call();
+          winners = aux.map(winner => parseInt(winner) + 1);
         }
 
         const data = {
@@ -48,6 +46,7 @@ function MyPolls (props) {
           account={props.account}
           hash={poll.hash}
           winners={poll.winners}
+          block={props.block}
           key={poll.hash}
         />
       ))}
