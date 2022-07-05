@@ -39,7 +39,7 @@ contract('SingleVoting', function (accounts) {
       const expire = (new BN(5)).add(await time.latestBlock());
       expect(await ballot4.expire(hash)).to.be.bignumber.equal(new BN(expire));
 
-      await expectRevert(ballot4.createPoll(3, '', 5, { from: owner }), 
+      await expectRevert(ballot4.createPoll(3, '', 5, { from: owner }),
         'Can\'t create poll, it already exists.');
     });
 
