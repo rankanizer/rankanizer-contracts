@@ -3,7 +3,7 @@
 pragma solidity ^0.8.3;
 
 import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
-import "./utils/QuickSort.sol";
+import "./utils/HeapSort.sol";
 import "./CondorcetVoting.sol";
 
 /**
@@ -112,7 +112,7 @@ contract SchulzeVoting is CondorcetVoting {
         uint256 n = ranks.length;
         uint256[] memory byRank = new uint256[](n);
 
-        QuickSort.sortRef(ranks, byRank);
+        HeapSort.sortRef(ranks, byRank);
 
         uint256 place = 1;
         _winners[hash].push(byRank[0]);

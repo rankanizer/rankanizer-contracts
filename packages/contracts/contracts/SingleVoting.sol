@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "./utils/EnumerablePollsMap.sol";
-import "./utils/QuickSort.sol";
+import "./utils/HeapSort.sol";
 import "./Ballot.sol";
 
 /**
