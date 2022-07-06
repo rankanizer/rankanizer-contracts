@@ -7,7 +7,7 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import MainPage from './rankanizer/MainPage';
 import Navigation from './rankanizer/Navigation.js';
 
-import Ballot from '@rankanizer-contracts/contracts/build/Ballot.json';
+import Ballot from '@rankanizer-contracts/contracts/build/SingleVoting.json';
 
 function App () {
   const [account, setAccount] = useState();
@@ -66,7 +66,8 @@ function App () {
       {ready &&
         <MainPage
           ballot = { ballot }
-          account = { account } />
+          account = { account }
+          block = { block }/>
       }
       <div className='footnote'><b>Account:</b><i>{ account }</i> - <b>Block:</b><i>{block}</i></div>
     </div>

@@ -44,9 +44,15 @@ const Vote = (props) => {
   async function submitHandler (event) {
     event.preventDefault();
 
-    await props.ballot.methods
-      .vote(hash, [enteredCandidate - 1])
-      .send({ from: props.account });
+    if (voted) {
+      await props.ballot.methods
+        .changeVote(hash, [enteredCandidate - 1])
+        .send({ from: props.account });
+    } else {
+      await props.ballot.methods
+        .submitVote(hash, [enteredCandidate - 1])
+        .send({ from: props.account });
+    }
 
     setEnteredCandidate('');
     setEnteredPoll('');
