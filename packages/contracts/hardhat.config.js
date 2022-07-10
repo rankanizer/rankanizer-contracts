@@ -69,18 +69,18 @@ module.exports = {
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: !withOptimizations,
       accounts: {
-        mnemonic: GANACHE_MNEMONIC,
+        mnemonic: GANACHE_MNEMONIC || '',
         initialIndex: 0,
         count: 10,
       },
     },
     goerli: {
-      url: ALCHEMY_API_URL,
+      url: ALCHEMY_API_URL || '',
       chainId: 5,
       from: '0x606C8a27611e1Cd8c3278079B6e2477Ee6e9e42d',
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: true,
-      accounts: [`0x${PRIVATE_KEY}`]
+      accounts: [`0x${PRIVATE_KEY || '19296c9c9ba8d87dff1024d9a494494f8174a85a0ddb28ad1d93825561b1d076'}`]
       ,
     },
   },
