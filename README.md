@@ -54,7 +54,10 @@ Finally you are able to start the Playground:
 `npm run start-playground`
 
 ## Deploy
-### In your local machine using Ganache
+
+You will have to ask for .env file and place it at rankanizer-contracts/contracts
+
+### On your local machine using Ganache
 
 In any folder run `npm install -g ganache-cli`
 
@@ -64,4 +67,14 @@ In any folder run `npm install -g ganache-cli`
 
 Inside project's main folder:
 
-`npm run deploy --network ganache --workspace @rankanizer-contracts/contracts`
+`env FIRST_DEPLOY=true npm run deploy-ganache --workspace @rankanizer-contracts/contracts`
+
+if you want to upgrade the contract, save the constract's address returned after first deploy and teporarily set PROXY_ADDRESS in .env file with this address. Than:
+
+`npm run deploy-ganache --workspace @rankanizer-contracts/contracts`
+
+### To Goerli Testnet
+
+Rankanizer contract is already deployed to Goerli @ `0x28BfBc2BeF4AE1C400703C8A6C3ae2d9daE40d70` so you will only want to upgrade the contract using:
+
+`npm run deploy-goerli --workspace @rankanizer-contracts/contracts`
