@@ -1,7 +1,4 @@
-require('dotenv').config();
-
 const { ethers, upgrades } = require('hardhat');
-const { PROXY_ADDRESS } = process.env;
 
 async function main () {
   const [deployer] = await ethers.getSigners();
@@ -14,7 +11,7 @@ async function main () {
   console.log('Account balance:', (await deployer.getBalance()).toString());
 
   const SchulzeVoting = await ethers.getContractFactory('SchulzeVoting');
-  const schulze = await upgrades.upgradeProxy(PROXY_ADDRESS,SchulzeVoting);
+  const schulze = await upgrades.deployProxy(SchulzeVoting);
   await schulze.deployed();
 
   console.log('Contract deployed at:', schulze.address);
