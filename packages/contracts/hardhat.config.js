@@ -31,7 +31,7 @@ require('solidity-coverage');
 require('@openzeppelin/hardhat-upgrades');
 require('dotenv').config();
 
-const { ALCHEMY_API_URL, PRIVATE_KEY, GANACHE_MNEMONIC } = process.env;
+const { ALCHEMY_API_URL, PRIVATE_KEY } = process.env;
 
 if (argv.enableGasReport) {
   require('hardhat-gas-reporter');
@@ -69,7 +69,7 @@ module.exports = {
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: !withOptimizations,
       accounts: {
-        mnemonic: GANACHE_MNEMONIC || '',
+        mnemonic: 'true hunt echo pink drama come work kiwi essay erupt joke stomach',
         initialIndex: 0,
         count: 10,
       },
