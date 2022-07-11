@@ -29,9 +29,6 @@ const argv = require('yargs/yargs')()
 require('@nomiclabs/hardhat-truffle5');
 require('solidity-coverage');
 require('@openzeppelin/hardhat-upgrades');
-require('dotenv').config();
-
-const { ALCHEMY_API_URL, PRIVATE_KEY, GANACHE_MNEMONIC } = process.env;
 
 if (argv.enableGasReport) {
   require('hardhat-gas-reporter');
@@ -69,19 +66,10 @@ module.exports = {
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: !withOptimizations,
       accounts: {
-        mnemonic: GANACHE_MNEMONIC || '',
+        mnemonic: 'true hunt echo pink drama come work kiwi essay erupt joke stomach',
         initialIndex: 0,
         count: 10,
       },
-    },
-    goerli: {
-      url: ALCHEMY_API_URL || '',
-      chainId: 5,
-      from: '0x606C8a27611e1Cd8c3278079B6e2477Ee6e9e42d',
-      blockGasLimit: 10000000,
-      allowUnlimitedContractSize: true,
-      accounts: [`0x${PRIVATE_KEY || '19296c9c9ba8d87dff1024d9a494494f8174a85a0ddb28ad1d93825561b1d076'}`]
-      ,
     },
   },
   gasReporter: {

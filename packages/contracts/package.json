@@ -5,8 +5,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "coverage": "env COVERAGE=true hardhat coverage",
-    "deploy-goerli": "env COMPILE_MODE=production npx hardhat run scripts/deploy.js --network goerli",
-    "deploy-ganache": "env COMPILE_MODE=production npx hardhat run scripts/deploy.js --network ganache",
+    "deploy": "npx hardhat run scripts/deploy.js",
     "lint": "npm run lint:js && npm run lint:sol",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "lint:js": "eslint --ignore-path .gitignore .",

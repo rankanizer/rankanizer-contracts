@@ -15,8 +15,5 @@
   "workspaces": [
     "packages/contracts",
     "packages/playground"
-  ],
-  "dependencies": {
-    "dotenv": "^16.0.1"
-  }
+  ]
 }
