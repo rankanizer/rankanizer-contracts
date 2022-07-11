@@ -32,14 +32,14 @@ In any folder run `npm install -g ganache-cli`
 
 Inside project's main folder:
 
-`env FIRST_DEPLOY=true npm run deploy-ganache --workspace @rankanizer-contracts/contracts`
+`npm run deploy-ganache --workspace @rankanizer-contracts/contracts`
 
 if you want to upgrade the contract, save the constract's address returned after first deploy and teporarily set PROXY_ADDRESS in .env file with this address. Than:
 
-`npm run deploy-ganache --workspace @rankanizer-contracts/contracts`
+`npm run upgrade-ganache --workspace @rankanizer-contracts/contracts`
 
 ### To Goerli Testnet
 
 Rankanizer contract is already deployed to Goerli @ `0x28BfBc2BeF4AE1C400703C8A6C3ae2d9daE40d70` so you will only want to upgrade the contract using:
 
-`npm run deploy-goerli --workspace @rankanizer-contracts/contracts`
+`npm run upgrade-goerli --workspace @rankanizer-contracts/contracts`
