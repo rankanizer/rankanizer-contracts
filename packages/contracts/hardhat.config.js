@@ -28,17 +28,14 @@ const argv = require('yargs/yargs')()
     alchemy_api_url: {
       alias: 'alchemyApiUrl',
       type: 'string',
-      requiresArg: false,
     },
     PRIVATE_KEY: {
       alias: 'privateKey',
       type: 'string',
-      requiresArg: false,
-      // default: '19296c9c9ba8d87dff1024d9a494494f8174a85a0ddb28ad1d93825561b1d076'
     },
   })
   .argv;
-
+console.log(argv)
 require('@nomiclabs/hardhat-truffle5');
 require('solidity-coverage');
 require('@openzeppelin/hardhat-upgrades');
@@ -84,17 +81,24 @@ module.exports = {
         count: 10,
       },
     },
-    goerli: {
-      url: argv.alchemyApiUrl,
-      chainId: 5,
-      from: '0x606C8a27611e1Cd8c3278079B6e2477Ee6e9e42d',
-      blockGasLimit: 10000000,
-      allowUnlimitedContractSize: true,
-      accounts: [`0x${argv.privateKey}`],
-    },
   },
   gasReporter: {
     currency: 'USD',
     outputFile: argv.ci ? 'gas-report.txt' : undefined,
   },
 };
+
+if (argv.alchemy_api_url && argv.privateKey) {
+  module.exports = {
+    networks: {
+      goerli: {
+        url: argv.alchemyApiUrl,
+        chainId: 5,
+        from: '0x606C8a27611e1Cd8c3278079B6e2477Ee6e9e42d',
+        blockGasLimit: 10000000,
+        allowUnlimitedContractSize: true,
+        accounts: [`0x${argv.privateKey}`],
+      },
+    }
+  }
+}
