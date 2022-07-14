@@ -1,5 +1,7 @@
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const { string } = require('yargs');
 const argv = require('yargs/yargs')()
   .env('')
   .options({
@@ -23,15 +25,23 @@ const argv = require('yargs/yargs')()
       type: 'string',
       default: '0.8.3',
     },
+    alchemy_api_url: {
+      alias: 'alchemyApiUrl',
+      type: 'string',
+      requiresArg: false,
+    },
+    PRIVATE_KEY: {
+      alias: 'privateKey',
+      type: 'string',
+      requiresArg: false,
+      // default: '19296c9c9ba8d87dff1024d9a494494f8174a85a0ddb28ad1d93825561b1d076'
+    },
   })
   .argv;
 
 require('@nomiclabs/hardhat-truffle5');
 require('solidity-coverage');
 require('@openzeppelin/hardhat-upgrades');
-require('dotenv').config();
-
-const { ALCHEMY_API_URL, PRIVATE_KEY } = process.env;
 
 if (argv.enableGasReport) {
   require('hardhat-gas-reporter');
@@ -75,13 +85,12 @@ module.exports = {
       },
     },
     goerli: {
-      url: ALCHEMY_API_URL || '',
+      url: argv.alchemyApiUrl,
       chainId: 5,
       from: '0x606C8a27611e1Cd8c3278079B6e2477Ee6e9e42d',
       blockGasLimit: 10000000,
       allowUnlimitedContractSize: true,
-      accounts: [`0x${PRIVATE_KEY || '19296c9c9ba8d87dff1024d9a494494f8174a85a0ddb28ad1d93825561b1d076'}`]
-      ,
+      accounts: [`0x${argv.privateKey}`],
     },
   },
   gasReporter: {
