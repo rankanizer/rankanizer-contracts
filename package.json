@@ -15,5 +15,5 @@
   "workspaces": [
     "packages/contracts",
     "packages/playground"
-  ],
+  ]
 }
