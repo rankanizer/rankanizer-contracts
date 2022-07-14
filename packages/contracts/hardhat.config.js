@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { string } = require('yargs');
+const yargs = require('yargs');
 const argv = require('yargs/yargs')()
   .env('')
   .options({
@@ -25,17 +25,9 @@ const argv = require('yargs/yargs')()
       type: 'string',
       default: '0.8.3',
     },
-    alchemy_api_url: {
-      alias: 'alchemyApiUrl',
-      type: 'string',
-    },
-    PRIVATE_KEY: {
-      alias: 'privateKey',
-      type: 'string',
-    },
   })
   .argv;
-console.log(argv)
+
 require('@nomiclabs/hardhat-truffle5');
 require('solidity-coverage');
 require('@openzeppelin/hardhat-upgrades');
@@ -99,6 +91,6 @@ if (argv.alchemy_api_url && argv.privateKey) {
         allowUnlimitedContractSize: true,
         accounts: [`0x${argv.privateKey}`],
       },
-    }
-  }
-}
+    },
+  };
+};
