@@ -16,6 +16,4 @@
     "packages/contracts",
     "packages/playground"
   ],
-  "dependencies": {
-  }
 }
