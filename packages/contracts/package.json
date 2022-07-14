@@ -5,7 +5,10 @@
   "scripts": {
     "compile": "hardhat compile",
     "coverage": "env COVERAGE=true hardhat coverage",
-    "deploy": "npx hardhat run scripts/deploy.js",
+    "deploy-goerli": "env COMPILE_MODE=production FIRST_DEPLOY=true npx hardhat run scripts/deploy.js --network goerli",
+    "upgrade-goerli": "env COMPILE_MODE=production npx hardhat run scripts/deploy.js --network goerli",
+    "deploy-ganache": "env COMPILE_MODE=production FIRST_DEPLOY=true npx hardhat run scripts/deploy.js --network ganache",
+    "upgrade-ganache": "env COMPILE_MODE=production npx hardhat run scripts/deploy.js --network ganache",
     "lint": "npm run lint:js && npm run lint:sol",
     "lint:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "lint:js": "eslint --ignore-path .gitignore .",
@@ -34,7 +37,8 @@
   "homepage": "https://github.com/enjin/claims-substrate#readme",
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^4.6.0",
-    "@remix-project/remixd": "^0.6.1"
+    "@remix-project/remixd": "^0.6.1",
+    "dotenv": "^16.0.1"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",

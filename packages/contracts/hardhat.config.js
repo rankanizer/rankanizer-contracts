@@ -1,3 +1,4 @@
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const argv = require('yargs/yargs')()
@@ -22,6 +23,12 @@ const argv = require('yargs/yargs')()
       alias: 'compileVersion',
       type: 'string',
       default: '0.8.3',
+    },
+    alchemyApiUrl: {
+      default: '',
+    },
+    privateKey: {
+      default: '19296c9c9ba8d87dff1024d9a494494f8174a85a0ddb28ad1d93825561b1d076',
     },
   })
   .argv;
@@ -70,6 +77,14 @@ module.exports = {
         initialIndex: 0,
         count: 10,
       },
+    },
+    goerli: {
+      url: argv.alchemyApiUrl,
+      chainId: 5,
+      from: '0x606C8a27611e1Cd8c3278079B6e2477Ee6e9e42d',
+      blockGasLimit: 10000000,
+      allowUnlimitedContractSize: true,
+      accounts: [`0x${argv.privateKey}`],
     },
   },
   gasReporter: {
