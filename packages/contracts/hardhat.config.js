@@ -80,7 +80,7 @@ module.exports = {
   },
 };
 
-if (argv.alchemy_api_url && argv.privateKey) {
+if (argv.alchemyApiUrl && argv.privateKey) {
   module.exports = {
     networks: {
       goerli: {
